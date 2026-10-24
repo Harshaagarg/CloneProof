@@ -43,7 +43,7 @@ test('warns about common Unix-only script syntax', () => {
 test('writes a Markdown report', () => {
   const root = makeProject({ packageJson: { name: 'demo', scripts: { test: 'node --test' } } });
   const report = formatMarkdownReport(analyzeProject(root));
-  assert.match(report, /CloneProof report: demo/);
+  assert.match(report, /CloneProof Setup Verification Report/);
   assert.match(report, /static checks only/i);
   fs.rmSync(root, { recursive: true, force: true });
 });

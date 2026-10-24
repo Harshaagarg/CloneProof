@@ -217,7 +217,7 @@ function finish(root, projectName, checks) {
 
 export function formatMarkdownReport(result) {
   const lines = [
-    `# CloneProof report: ${result.projectName}`,
+    `# CloneProof Setup Verification Report`,
     '',
     `- **Project folder:** \`${result.root}\``,
     `- **Generated:** ${new Date().toISOString()}`,
@@ -237,8 +237,11 @@ export function formatMarkdownReport(result) {
 const executionCheck = result.checks.find(
   (item) => item.title === 'Test script executes successfully'
 );
-
-if (executionCheck && executionCheck.explanation) {
+if (
+  executionCheck &&
+  executionCheck.status === 'FAIL' &&
+  executionCheck.explanation
+) {
   lines.push(
     '',
     '## Execution Explanation',
@@ -248,14 +251,17 @@ if (executionCheck && executionCheck.explanation) {
   );
 }
 
-  lines.push('', '## What to do next', '', '- Fix every **FAIL** item first.', '- Review each **WARN** item; a warning may be acceptable for your project.', '- Run the documented setup and tests on a clean Windows environment before claiming Windows compatibility.', '');
+
   
   lines.push(
   '',
-  '## Setup Guidance',
+  '## Recommended Next Steps',
   '',
-  '- If the test passes, remember that this does not guarantee the entire project works.',
-  '- If the test fails, review the error output, check that dependencies are installed, and verify the project configuration.',
+  '- Fix every **FAIL** item before relying on the project.',
+  '- Review each **WARN** item and decide whether it applies.',
+  '- If tests fail, inspect the error output and verify dependencies and configuration.',
+  '- Test the project on a clean Windows environment before claiming Windows compatibility.',
+  '- Even if all checks pass, verify the application manually; these checks cannot guarantee the entire project works.',
   ''
 );
 
