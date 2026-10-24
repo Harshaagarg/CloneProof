@@ -247,5 +247,33 @@ test('warns when dependency version values are not strings', () => {
   );
 });
 
+test('warns when dependency version strings are empty', () => {
+  const projectPath = makeProject({
+    packageJson: {
+      name: 'test-project',
+      version: '1.0.0',
+      scripts: {
+        test: 'node --test'
+      },
+      dependencies: {
+        express: ''
+      }
+    }
+  });
+
+  const result = analyzeProject(projectPath);
+
+  assert.ok(
+    result.checks.some(
+      (item) =>
+        item.status === 'WARN' &&
+        item.title === 'Dependency version values are valid' &&
+        item.detail.includes('express')
+    ),
+    'Expected a warning for an empty dependency version'
+  );
+});
+
+
 
 

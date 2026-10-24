@@ -174,7 +174,7 @@ export function analyzeProject(projectPath) {
       !Array.isArray(dependencies)
     ) {
       for (const [name, version] of Object.entries(dependencies)) {
-        if (typeof version !== 'string') {
+        if (typeof version !== 'string' || version.trim() === '') {
           invalidDependencyVersions.push(`${name} (${field})`);
         }
       }
