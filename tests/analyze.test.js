@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { explainFailure } from '../src/run-check.js';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -112,5 +113,15 @@ test('explains missing npm packages', async () => {
 
   assert.match(explanation, /npm package could not be found/i);
   assert.match(explanation, /npm install/i);
+});
+test('explains JavaScript module format errors', () => {
+  const explanation = explainFailure(
+    '',
+    'SyntaxError: Cannot use import statement outside a module',
+    ''
+  );
+
+  assert.match(explanation, /module format mismatch/i);
+  assert.match(explanation, /package\.json/i);
 });
 

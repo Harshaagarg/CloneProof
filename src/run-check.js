@@ -52,6 +52,13 @@ export function explainFailure(stdout, stderr, message) {
   ) {
     return 'The requested npm script may be missing. Check the scripts section of package.json.';
   }
+    if (
+    output.includes('cannot use import statement outside a module') ||
+    output.includes('require() of es module') ||
+    output.includes('err_require_esm')
+  ) {
+    return 'A JavaScript module format mismatch may have occurred. Check whether the project uses ES modules or CommonJS, and use a compatible import or require statement. For ES modules, check the package.json "type" field or use the .mjs extension.';
+  }
 
   
 
