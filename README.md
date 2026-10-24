@@ -1,10 +1,10 @@
-# CloneProof — Windows Setup Verifier
+# CloneProof - Windows Setup Verifier
 
 **Find setup inconsistencies in Node.js projects before they waste your time.**
 
 CloneProof is a beginner-friendly command-line tool that checks whether a JavaScript/Node.js project's setup instructions, package configuration, and selected test command are consistent.
 
-It combines static configuration checks with an optional execution check for the project's `npm test` script. It generates a Markdown report with **PASS**, **WARN**, and **FAIL** results, helping developers understand what needs attention.
+It combines static configuration checks with an optional execution check for the project's `npm test` script. It generates a Markdown report with **PASS**, **WARN**, and **FAIL** results to help developers understand what needs attention.
 
 > **Important:** CloneProof is a diagnostic aid, not a guarantee that a project will work on every Windows machine.
 
@@ -28,10 +28,11 @@ It combines static configuration checks with an optional execution check for the
 - PowerShell or another terminal
 
 Downloads:
+
 - [Node.js](https://nodejs.org/en/download)
 - [Visual Studio Code](https://code.visualstudio.com/)
 
-## Getting started
+## Getting Started
 
 ### 1. Open the project
 
@@ -52,7 +53,7 @@ Both commands should print version numbers.
 
 ### 3. Run CloneProof on the included sample
 
-From the root folder, run:
+From the project root, run:
 
 ```powershell
 node src/cli.js sample-project
@@ -80,9 +81,9 @@ node src/cli.js "C:\Users\YOUR-NAME\Desktop\my-project"
 
 Replace the example path with the actual project path.
 
-**Safety note:** Running a project's npm script can execute arbitrary code. Only run execution checks on projects you trust. Review unfamiliar scripts before running them.
+> **Safety note:** Running a project's npm script can execute arbitrary code. Only run execution checks on projects you trust. Review unfamiliar scripts before running them.
 
-## Understanding the report
+## Understanding the Report
 
 | Result | Meaning |
 | --- | --- |
@@ -90,14 +91,16 @@ Replace the example path with the actual project path.
 | WARN | Review the finding; it may or may not require a change. |
 | FAIL | The check identified a problem that needs investigation. |
 
-For example, if the README documents `npm run dev` and `package.json` defines a `dev` script, CloneProof can confirm that the names match. That does not prove the application will start successfully.
+For example, if the README documents `npm run dev` and `package.json` defines a `dev` script, CloneProof can check whether the names match. That does not prove the application will start successfully.
 
 Likewise, a failed test command is evidence of an execution problem, but its root cause may require further investigation.
 
-## Project structure
+## Project Structure
 
 ```text
 CloneProof-Starter/
+├── .github/
+│   └── workflows/
 ├── src/
 │   ├── analyze.js
 │   ├── cli.js
@@ -107,15 +110,15 @@ CloneProof-Starter/
 ├── sample-project/
 ├── broken-project/
 ├── examples/
-├── .github/
 ├── package.json
 ├── package-lock.json
+├── .gitignore
 └── README.md
 ```
 
 The `broken-project` folder is a deliberately faulty example used to observe how CloneProof reports a failed test command.
 
-## Current limitations
+## Current Limitations
 
 - Supports JavaScript/Node.js projects rather than every programming ecosystem.
 - Static checks use heuristics and can produce false positives or miss problems.
@@ -135,7 +138,9 @@ The `broken-project` folder is a deliberately faulty example used to observe how
 
 ## Contributing
 
-Suggestions, bug reports, and contributions are welcome. When reporting a problem, include the relevant check result, a minimal example where possible, and steps to reproduce it. Do not include passwords, API keys, or other secrets in reports.
+Suggestions, bug reports, and contributions are welcome. When reporting a problem, include the relevant check result, a minimal example where possible, and steps to reproduce it.
+
+Do not include passwords, API keys, or other secrets in reports.
 
 ## Disclaimer
 
