@@ -155,6 +155,42 @@ export function analyzeProject(projectPath) {
       )
     );
   }
+  
+  // Check whether dependency version values are strings.
+  const dependencyFields = [
+    'dependencies',
+    'devDependencies',
+    'optionalDependencies'
+  ];
+
+  const invalidDependencyVersions = [];
+
+  for (const field of dependencyFields) {
+    const dependencies = pkg[field];
+
+    if (
+      dependencies &&
+      typeof dependencies === 'object' &&
+      !Array.isArray(dependencies)
+    ) {
+      for (const [name, version] of Object.entries(dependencies)) {
+        if (typeof version !== 'string') {
+          invalidDependencyVersions.push(`${name} (${field})`);
+        }
+      }
+    }
+  }
+
+  if (invalidDependencyVersions.length > 0) {
+    checks.push(
+      check(
+        'WARN',
+        'Dependency version values are valid',
+        `These dependencies must have string version values: ${invalidDependencyVersions.join(', ')}.`
+      )
+    );
+  }
+
 
   // Check that every package script is a string command.
   if (

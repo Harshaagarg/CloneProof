@@ -220,3 +220,32 @@ test('warns when package script values are not strings', () => {
 });
 
 
+test('warns when dependency version values are not strings', () => {
+  const projectPath = makeProject({
+    packageJson: {
+      name: 'test-project',
+      version: '1.0.0',
+      scripts: {
+        test: 'node --test'
+      },
+      dependencies: {
+        express: 123
+      }
+    }
+  });
+
+  const result = analyzeProject(projectPath);
+
+  assert.ok(
+    result.checks.some(
+      (item) =>
+        item.status === 'WARN' &&
+        item.title === 'Dependency version values are valid' &&
+        item.detail.includes('express')
+    ),
+    'Expected a warning for a non-string dependency version'
+  );
+});
+
+
+
