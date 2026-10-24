@@ -275,5 +275,44 @@ test('warns when dependency version strings are empty', () => {
 });
 
 
+test('does not execute project test scripts by default', () => {
+  const projectPath = makeProject({
+    packageJson: {
+      name: 'safety-test-project',
+      version: '1.0.0',
+      scripts: {
+        test: 'node -e "require(\'node:fs\').writeFileSync(\'execution-marker.txt\', \'ran\')"'
+      }
+    }
+  });
+
+  const reportPath = path.join(projectPath, 'cloneproof-report.md');
+  const cliPath = path.resolve('src/cli.js');
+
+  const result = spawnSync(
+    process.execPath,
+    [cliPath, projectPath, reportPath],
+    {
+      encoding: 'utf8',
+      timeout: 10000
+    }
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(
+    result.stdout,
+    /Static analysis only\. No project scripts were executed\./
+  );
+  assert.doesNotMatch(result.stdout, /--- Execution Check ---/);
+  assert.equal(
+    fs.existsSync(path.join(projectPath, 'execution-marker.txt')),
+    false,
+    'The project test script should not have run'
+  );
+});
+
+
+
+
 
 
