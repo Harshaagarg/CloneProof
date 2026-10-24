@@ -145,6 +145,7 @@ export function analyzeProject(projectPath) {
     invalidMetadataFields.push('engines');
   }
 
+  
   if (invalidMetadataFields.length > 0) {
     checks.push(
       check(
@@ -155,6 +156,26 @@ export function analyzeProject(projectPath) {
     );
   }
 
+  // Check that every package script is a string command.
+  if (
+    pkg.scripts &&
+    typeof pkg.scripts === 'object' &&
+    !Array.isArray(pkg.scripts)
+  ) {
+    const invalidScripts = Object.entries(pkg.scripts)
+      .filter(([, command]) => typeof command !== 'string')
+      .map(([name]) => name);
+
+    if (invalidScripts.length > 0) {
+      checks.push(
+        check(
+          'WARN',
+          'Package script values are valid',
+          `These script entries must contain string commands: ${invalidScripts.join(', ')}.`
+        )
+      );
+    }
+  }
 
   const scripts = pkg.scripts && typeof pkg.scripts === 'object' ? pkg.scripts : {};
   if (Object.keys(scripts).length === 0) {
@@ -305,3 +326,7 @@ if (
 
 return lines.join('\n');
 }
+
+
+
+ 

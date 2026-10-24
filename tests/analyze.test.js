@@ -194,3 +194,29 @@ assert.ok(
 
 
 
+test('warns when package script values are not strings', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: {
+        test: 123,
+        start: null
+      }
+    }
+  });
+
+  const result = analyzeProject(root);
+
+  assert.ok(
+    result.checks.some(
+      (item) =>
+        item.status === 'WARN' &&
+        item.title === 'Package script values are valid' &&
+        item.detail.includes('test, start')
+    )
+  );
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+
