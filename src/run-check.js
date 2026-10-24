@@ -106,7 +106,16 @@ export function runNpmScript(projectPath, scriptName = 'test', timeoutMs = 15000
     const timer = setTimeout(() => {
       if (finished) return;
       finished = true;
-      child.kill();
+
+      if (child.pid && process.platform === 'win32') {
+        spawn('taskkill', ['/PID', String(child.pid), '/T', '/F'], {
+          windowsHide: true,
+          stdio: 'ignore'
+        });
+      } else {
+        child.kill();
+      }
+
       resolve({
         success: false,
         message: `The script timed out after ${timeoutMs} ms.`,

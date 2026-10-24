@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { explainFailure } from '../src/run-check.js';
+import { explainFailure, runNpmScript } from '../src/run-check.js';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -310,9 +310,17 @@ test('does not execute project test scripts by default', () => {
     'The project test script should not have run'
   );
 });
-
-
-
-
-
-
+test('reports when a test script exceeds its timeout', async () => {
+  const projectPath = makeProject({
+    packageJson: {
+      name: 'timeout-test-project',
+      version: '1.0.0',
+      scripts: {
+        test: 'node -e "setTimeout(() => {}, 5000)"'
+      }
+    }
+  });
+  const result = await runNpmScript(projectPath, 'test', 500);
+  assert.equal(result.success, false);
+  assert.match(result.message, /timed out/i);
+});
