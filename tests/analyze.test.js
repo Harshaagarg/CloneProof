@@ -147,3 +147,22 @@ test('reports a clear error for a missing project path', () => {
   );
 });
 
+test('handles an invalid scripts structure without crashing', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: 'hello',
+      dependencies: {}
+    }
+  });
+
+  const result = analyzeProject(root);
+
+  assert.ok(result);
+  assert.ok(Array.isArray(result.checks));
+  assert.ok(result.checks.length > 0);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+
