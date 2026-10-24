@@ -1,0 +1,15 @@
+{
+  "name": "cloneproof-starter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A beginner-friendly starter for checking JavaScript project setup instructions.",
+  "scripts": {
+    "start": "node src/cli.js ./sample-project ./cloneproof-report.md",
+    "check:sample": "node src/cli.js ./sample-project ./cloneproof-report.md",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

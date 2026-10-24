@@ -1,0 +1,116 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { analyzeProject, formatMarkdownReport } from '../src/analyze.js';
+
+function makeProject({ packageJson, readme = '# Demo\n\nRun `npm test`.' , extraFiles = {} } = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'cloneproof-test-'));
+  if (packageJson !== undefined) fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify(packageJson, null, 2));
+  if (readme !== null) fs.writeFileSync(path.join(root, 'README.md'), readme);
+  for (const [name, content] of Object.entries(extraFiles)) fs.writeFileSync(path.join(root, name), content);
+  return root;
+}
+
+test('passes basic checks for a well-documented project', () => {
+  const root = makeProject({
+    packageJson: { name: 'demo', engines: { node: '>=22' }, scripts: { test: 'node --test', dev: 'node app.js' } },
+    extraFiles: { 'package-lock.json': '{"name":"demo","lockfileVersion":3,"packages":{}}' }
+  });
+  const result = analyzeProject(root);
+  assert.equal(result.summary.fail, 0);
+  assert.ok(result.checks.some((item) => item.title === 'README npm commands match package.json' && item.status === 'PASS'));
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('flags a README command whose script does not exist', () => {
+  const root = makeProject({ packageJson: { name: 'demo', scripts: { test: 'node --test' } }, readme: '# Demo\n\nRun `npm run launch`.' });
+  const result = analyzeProject(root);
+  assert.ok(result.checks.some((item) => item.status === 'FAIL' && item.title === 'README npm commands match package.json'));
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('warns about common Unix-only script syntax', () => {
+  const root = makeProject({ packageJson: { name: 'demo', scripts: { clean: 'rm -rf dist' } }, readme: '# Demo' });
+  const result = analyzeProject(root);
+  assert.ok(result.checks.some((item) => item.status === 'WARN' && item.title.includes('Windows shell')));
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('writes a Markdown report', () => {
+  const root = makeProject({ packageJson: { name: 'demo', scripts: { test: 'node --test' } } });
+  const report = formatMarkdownReport(analyzeProject(root));
+  assert.match(report, /CloneProof report: demo/);
+  assert.match(report, /static checks only/i);
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+
+
+
+test('warns when a declared dependency is missing', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      dependencies: {
+        'cloneproof-test-package': '1.0.0'
+      }
+    }
+  });
+
+  const result = analyzeProject(root);
+
+  assert.ok(
+    result.checks.some(
+      (item) =>
+        item.status === 'WARN' &&
+        item.title === 'Declared dependencies are installed' &&
+        item.detail?.includes('cloneproof-test-package')
+    )
+  );
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+test('flags malformed package.json', () => {
+  const root = makeProject({
+    extraFiles: { 'package.json': '{ invalid json' }
+  });
+
+  const result = analyzeProject(root);
+
+  assert.ok(
+    result.checks.some(
+      (item) =>
+        item.status === 'FAIL' &&
+        item.title === 'package.json is valid JSON'
+    )
+  );
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+test('explains missing JavaScript modules', async () => {
+  const { explainFailure } = await import('../src/run-check.js');
+
+  const explanation = explainFailure(
+    '',
+    "Error: Cannot find module './missing-file.js'",
+    'npm run test exited with code 1.'
+  );
+
+  assert.match(explanation, /module could not be found/i);
+  assert.match(explanation, /import path is correct/i);
+});
+test('explains missing npm packages', async () => {
+  const { explainFailure } = await import('../src/run-check.js');
+
+  const explanation = explainFailure(
+    '',
+    "Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'express' imported from app.js",
+    'npm run test exited with code 1.'
+  );
+
+  assert.match(explanation, /npm package could not be found/i);
+  assert.match(explanation, /npm install/i);
+});
+

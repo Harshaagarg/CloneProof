@@ -1,0 +1,1 @@
+{ "name": "broken-demo", "scripts": { "test": "node missing-file.js" } }

@@ -1,0 +1,30 @@
+# EXAMPLE ONLY: copy into .github/workflows/windows-setup.yml
+# Use only in a repository you own or are authorized to test.
+name: Windows setup verification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          # Change 24 to the Node.js version your project supports.
+          node-version: 24
+
+      - name: Install dependencies from the committed lockfile
+        run: npm ci
+
+      - name: Run tests
+        run: npm test

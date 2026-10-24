@@ -1,0 +1,15 @@
+
+{
+  "name": "cloneproof-sample-project",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A tiny sample project for trying CloneProof.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node app.js",
+    "test": "node --test"
+  },
+    "type": "module"
+}
