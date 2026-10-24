@@ -8,7 +8,18 @@ const reportPath = process.argv[3] ?? './cloneproof-report.md';
 
 async function main() {
   try {
-  const result = analyzeProject(projectPath);
+    const absoluteProjectPath = path.resolve(projectPath);
+
+    if (
+      !fs.existsSync(absoluteProjectPath) ||
+      !fs.statSync(absoluteProjectPath).isDirectory()
+    ) {
+      throw new Error(
+        `Project path does not exist or is not a directory: ${absoluteProjectPath}`
+      );
+    }
+
+    const result = analyzeProject(absoluteProjectPath);
   const execution = await runNpmScript(result.root, 'test');
 
 console.log('\n--- Execution Check ---');

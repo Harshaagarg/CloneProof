@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { explainFailure } from '../src/run-check.js';
@@ -123,5 +124,26 @@ test('explains JavaScript module format errors', () => {
 
   assert.match(explanation, /module format mismatch/i);
   assert.match(explanation, /package\.json/i);
+});
+test('reports a clear error for a missing project path', () => {
+  const missingPath = path.join(
+    os.tmpdir(),
+    'cloneproof-definitely-missing-project'
+  );
+
+  const result = spawnSync(
+    process.execPath,
+    ['src/cli.js', missingPath],
+    {
+      encoding: 'utf8',
+      cwd: process.cwd()
+    }
+  );
+
+  assert.equal(result.status, 1);
+  assert.match(
+    result.stderr,
+    /Project path does not exist or is not a directory/i
+  );
 });
 
