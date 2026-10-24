@@ -165,4 +165,32 @@ test('handles an invalid scripts structure without crashing', () => {
   fs.rmSync(root, { recursive: true, force: true });
 });
 
+test('warns when package metadata fields have invalid structures', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: 'hello',
+      dependencies: 'not-an-object',
+      devDependencies: [],
+      engines: 'invalid'
+    }
+  });
+
+  const result = analyzeProject(root);
+
+  assert.ok(result);
+
+assert.ok(
+  result.checks.some(
+    (item) =>
+      item.status === 'WARN' &&
+      item.title.includes('package.json metadata')
+  ),
+  'Expected a warning about invalid package.json metadata'
+);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+
 

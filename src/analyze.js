@@ -117,6 +117,44 @@ export function analyzeProject(projectPath) {
     checks.push(check('WARN', 'Remaining checks skipped', 'Fix package.json first; script and dependency checks need a valid package file.'));
     return finish(root, path.basename(root), checks);
   }
+  
+  // Check whether common package.json fields have valid structures.
+  const invalidMetadataFields = [];
+
+  for (const field of ['scripts', 'dependencies', 'devDependencies', 'optionalDependencies']) {
+    if (
+      pkg[field] !== undefined &&
+      (
+        pkg[field] === null ||
+        typeof pkg[field] !== 'object' ||
+        Array.isArray(pkg[field])
+      )
+    ) {
+      invalidMetadataFields.push(field);
+    }
+  }
+
+  if (
+    pkg.engines !== undefined &&
+    (
+      pkg.engines === null ||
+      typeof pkg.engines !== 'object' ||
+      Array.isArray(pkg.engines)
+    )
+  ) {
+    invalidMetadataFields.push('engines');
+  }
+
+  if (invalidMetadataFields.length > 0) {
+    checks.push(
+      check(
+        'WARN',
+        'package.json metadata structures',
+        `These fields should contain JSON objects: ${invalidMetadataFields.join(', ')}. Correct their structures to improve setup verification accuracy.`
+      )
+    );
+  }
+
 
   const scripts = pkg.scripts && typeof pkg.scripts === 'object' ? pkg.scripts : {};
   if (Object.keys(scripts).length === 0) {
