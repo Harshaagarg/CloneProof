@@ -39,15 +39,25 @@ test('warns about common Unix-only script syntax', () => {
   assert.ok(result.checks.some((item) => item.status === 'WARN' && item.title.includes('Windows shell')));
   fs.rmSync(root, { recursive: true, force: true });
 });
+test('writes a useful Markdown report', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: { test: 'node --test' }
+    }
+  });
 
-test('writes a Markdown report', () => {
-  const root = makeProject({ packageJson: { name: 'demo', scripts: { test: 'node --test' } } });
   const report = formatMarkdownReport(analyzeProject(root));
+
   assert.match(report, /CloneProof Setup Verification Report/);
   assert.match(report, /static checks only/i);
+  assert.match(report, /Recommended Next Steps/);
+  assert.match(report, /PASS/);
+  assert.match(report, /WARN/);
+  assert.match(report, /FAIL/);
+
   fs.rmSync(root, { recursive: true, force: true });
 });
-
 
 
 

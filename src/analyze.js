@@ -311,57 +311,72 @@ function finish(root, projectName, checks) {
 }
 
 export function formatMarkdownReport(result) {
+const projectName = result.projectName || 'Unnamed Project';
+
   const lines = [
-    `# CloneProof Setup Verification Report`,
+    '# CloneProof Setup Verification Report',
+    '',
+    `## Project: ${projectName}`,
     '',
     `- **Project folder:** \`${result.root}\``,
     `- **Generated:** ${new Date().toISOString()}`,
-    `- **Summary:** ${result.summary.pass} PASS · ${result.summary.warn} WARN · ${result.summary.fail} FAIL`,
     '',
-    '> CloneProof v0.1 performs static checks only. It does not install packages or execute project code. A PASS is not proof that the entire project works on every Windows machine.',
+    '## Verification Summary',
+    '',
+    `- **PASS:** ${result.summary.pass}`,
+    `- **WARN:** ${result.summary.warn}`,
+    `- **FAIL:** ${result.summary.fail}`,
+    '',
+    '> CloneProof performs static checks only by default. It does not install packages or execute project code during static analysis. A PASS does not guarantee that the entire project works on every Windows machine.',
+    '',
+    '## Detailed Findings',
     '',
     '| Status | Check | Finding |',
     '|---|---|---|'
   ];
 
   for (const item of result.checks) {
-    const detail = item.detail.replaceAll('|', '\\|').replaceAll('\n', ' ');
-    lines.push(`| **${item.status}** | ${item.title.replaceAll('|', '\\|')} | ${detail} |`);
+    const title = item.title.replaceAll('|', '\\|');
+    const detail = item.detail
+      .replaceAll('|', '\\|')
+      .replaceAll('\n', ' ');
+
+    lines.push(`| **${item.status}** | ${title} | ${detail} |`);
   }
-  
-const executionCheck = result.checks.find(
-  (item) => item.title === 'Test script executes successfully'
-);
-if (
-  executionCheck &&
-  executionCheck.status === 'FAIL' &&
-  executionCheck.explanation
-) {
+
+  const executionCheck = result.checks.find(
+    (item) => item.title === 'Test script executes successfully'
+  );
+
+  if (
+    executionCheck &&
+    executionCheck.status === 'FAIL' &&
+    executionCheck.explanation
+  ) {
+    lines.push(
+      '',
+      '## Execution Explanation',
+      '',
+      executionCheck.explanation,
+      ''
+    );
+  }
+
   lines.push(
     '',
-    '## Execution Explanation',
+    '## Recommended Next Steps',
     '',
-    executionCheck.explanation,
+    '1. Fix every **FAIL** item before relying on the project.',
+    '2. Review each **WARN** item and decide whether it applies.',
+    '3. For failed tests, inspect the error output and verify dependencies and configuration.',
+    '4. Test the project in a clean Windows environment before claiming Windows compatibility.',
+    '5. Manually verify the application, even when all checks pass.',
     ''
   );
+
+  return lines.join('\n');
 }
 
-
-  
-  lines.push(
-  '',
-  '## Recommended Next Steps',
-  '',
-  '- Fix every **FAIL** item before relying on the project.',
-  '- Review each **WARN** item and decide whether it applies.',
-  '- If tests fail, inspect the error output and verify dependencies and configuration.',
-  '- Test the project on a clean Windows environment before claiming Windows compatibility.',
-  '- Even if all checks pass, verify the application manually; these checks cannot guarantee the entire project works.',
-  ''
-);
-
-return lines.join('\n');
-}
 
 
 
