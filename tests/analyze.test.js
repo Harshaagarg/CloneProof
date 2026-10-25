@@ -108,6 +108,56 @@ test('detects Unix delete command after || in a longer script', () => {
   fs.rmSync(root, { recursive: true, force: true });
 });
 
+test('detects Unix delete command after && with extra spaces', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: {
+        clean: 'echo Cleaning &&   rm -rf dist'
+      }
+    },
+    readme: '# Demo'
+  });
+
+  const result = analyzeProject(root);
+
+  const windowsCheck = result.checks.find(
+    (item) => item.title.includes('Windows shell')
+  );
+
+  assert.ok(windowsCheck);
+  assert.equal(windowsCheck.status, 'WARN');
+  assert.match(windowsCheck.detail, /rm -rf/);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('detects Unix delete command on a new line', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: {
+        clean: 'echo Cleaning\nrm -rf dist'
+      }
+    },
+    readme: '# Demo'
+  });
+
+  const result = analyzeProject(root);
+
+  const windowsCheck = result.checks.find(
+    (item) => item.title.includes('Windows shell')
+  );
+
+  assert.ok(windowsCheck);
+  assert.equal(windowsCheck.status, 'WARN');
+  assert.match(windowsCheck.detail, /rm -rf/);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+
+
 test('detects Unix-only commands after ||', () => {
 
   const root = makeProject({
@@ -630,9 +680,9 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       command: 'cat README.md',
       expected: 'WARN'
     }
+  ];
 
-      ];
-        for (const item of cases) {
+  for (const item of cases) {
     await t.test(item.name, () => {
       const root = makeProject({
         packageJson: {
@@ -654,5 +704,30 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
         fs.rmSync(root, { recursive: true, force: true });
       }
     });
+  }
+});
+
+test('allows a Windows command on a new line', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: {
+        clean: 'echo Cleaning\n del dist'
+      }
+    },
+    readme: '# Demo'
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const windowsCheck = result.checks.find(
+      (item) => item.title.includes('Windows shell')
+    );
+
+    assert.ok(windowsCheck);
+    assert.equal(windowsCheck.status, 'PASS');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
   }
 });
