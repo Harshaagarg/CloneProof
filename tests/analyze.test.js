@@ -716,6 +716,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   expected: 'PASS'
 },
 {
+  name: 'allows quoted Unix command text after a pipe to Node.js',
+  command: 'echo "example" | node app.js "grep error"',
+  expected: 'PASS'
+},
+{
   name: 'detects a real Unix command after a quoted argument',
   command: 'node app.js "hello world" && rm -rf dist',
   expected: 'WARN'
