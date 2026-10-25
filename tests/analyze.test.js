@@ -699,7 +699,17 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       name: 'detects Unix delete command on a new line with indentation',
       command: 'echo Cleaning\n    rm -rf dist',
       expected: 'WARN'
-    }
+    },
+    {
+  name: 'ignores Unix command text inside single-quoted echo text',
+  command: "echo 'Example: && rm -rf dist'",
+  expected: 'PASS'
+},
+{
+  name: 'allows Unix command text in a quoted Node.js argument',
+  command: 'node app.js "example rm -rf dist"',
+  expected: 'PASS'
+},
   ];
 
   for (const item of cases) {
