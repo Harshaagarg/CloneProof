@@ -93,7 +93,7 @@ const patterns = [
     why: '`cp` or `mv` may not be available as written in Windows PowerShell.'
   },
   {
-    regex: /(^|&&\s*|\|\|\s*|;\s*|\n)\s*(?:grep|sed|awk|chmod|touch|cat)\b|(^|&&\s*|\|\|\s*|;\s*|\n)\s*mkdir\s+-p\b/i,
+    regex: /(?:^|&&\s*|\|\||(?<!\|)\|(?!\|)|;|\n)\s*(?:grep|sed|awk|chmod|touch|cat)\b|(^|&&\s*|\|\|\s*|;\s*|\n)\s*mkdir\s+-p\b/i,
     why: 'A Unix utility or option may not be available in Windows PowerShell.'
   },
   {

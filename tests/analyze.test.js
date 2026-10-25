@@ -720,6 +720,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   command: 'echo "Please do not run rm -rf dist"',
   expected: 'PASS'
 },
+{
+  name: 'detects grep after a single pipe',
+  command: 'node app.js | grep error',
+  expected: 'WARN'
+},
   ];
 
   for (const item of cases) {
