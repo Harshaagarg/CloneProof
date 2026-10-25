@@ -585,6 +585,22 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       name: 'detects mkdir -p',
       command: 'mkdir -p dist/output',
       expected: 'WARN'
+    },
+
+    {
+      name: 'allows Windows echo command',
+      command: 'echo Hello World',
+      expected: 'PASS'
+    },
+    {
+      name: 'allows Windows del command',
+      command: 'del temp.txt',
+      expected: 'PASS'
+    },
+    {
+      name: 'allows Node.js command with arguments',
+      command: 'node src/index.js --help',
+      expected: 'PASS'
     }
 
       ];
