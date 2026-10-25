@@ -685,6 +685,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       command: 'echo "Do not run rm -rf dist"',
       expected: 'PASS'
     },
+{
+  name: 'allows Unix command after separator when only quoted echo text',
+  command: 'echo "Example: && rm -rf dist"',
+  expected: 'PASS'
+},
     {
       name: 'detects Unix delete command on a new line with indentation',
       command: 'echo Cleaning\n    rm -rf dist',

@@ -75,6 +75,9 @@ function getWindowsFixSuggestion(command) {
 
   return 'Review this command for Windows shell compatibility and test it before running.';
 }
+function removeQuotedText(command) {
+  return command.replace(/(["'])(?:\\.|(?!\1)[^\\])*?\1/g, '');
+}
 function findPotentialWindowsScriptIssues(scripts = {}) {
   const issues = [];
 
@@ -107,7 +110,7 @@ const patterns = [
   for (const [name, command] of Object.entries(scripts)) {
     if (typeof command !== 'string') continue;
     for (const { regex, why } of patterns) {
-      if (regex.test(command)) {
+      if (regex.test(removeQuotedText(command))) {
            issues.push(
           `Script "${name}": ${why} Command: ${command} Suggested fix: ${getWindowsFixSuggestion(command)}`
         );
