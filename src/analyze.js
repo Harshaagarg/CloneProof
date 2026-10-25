@@ -48,7 +48,7 @@ function findDocumentedNpmScripts(readmeText) {
 function findPotentialWindowsScriptIssues(scripts = {}) {
   const issues = [];
   const patterns = [
-    { regex: /(^|&&\s*)rm\s+-rf\b/i, why: '`rm -rf` is a Unix-style delete command.' },
+{ regex: /(^|&&\s*|\|\|\s*)rm\s+-rf\b/i, why: '`rm -rf` is a Unix-style delete command.' },
     { regex: /(^|&&\s*)(?:cp|mv)\s+/i, why: '`cp` or `mv` may not be available as written in Windows PowerShell.' },
     { regex: /(^|&&\s*)(?:grep|sed|awk|chmod|touch)\b/i, why: 'A Unix utility may not be available in Windows PowerShell.' },
     { regex: /(^|&&\s*)export\s+[A-Za-z_][A-Za-z0-9_]*=/i, why: '`export NAME=value` is Unix shell syntax.' },
