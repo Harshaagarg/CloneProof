@@ -51,7 +51,7 @@ function findPotentialWindowsScriptIssues(scripts = {}) {
   const patterns = [
     { regex: /(^|&&\s*|\|\|\s*|;\s*)rm\s+-rf\b/i, why: '`rm -rf` is a Unix-style delete command.' },
     { regex: /(^|&&\s*|\|\|\s*|;\s*)(?:cp|mv)\s+/i, why: '`cp` or `mv` may not be available as written in Windows PowerShell.' },
-    { regex: /(^|&&\s*|\|\|\s*|;\s*)(?:grep|sed|awk|chmod|touch)\b/i, why: 'A Unix utility may not be available in Windows PowerShell.' },
+    { regex: /(^|&&\s*|\|\|\s*|;\s*)(?:grep|sed|awk|chmod|touch)\b|(^|&&\s*|\|\|\s*|;\s*)mkdir\s+-p\b/i, why: 'A Unix utility or option may not be available in Windows PowerShell.' },
     { regex: /(^|&&\s*|\|\|\s*|;\s*)export\s+[A-Za-z_][A-Za-z0-9_]*=/i, why: '`export NAME=value` is Unix shell syntax.' },
     { regex: /(^|\s)(?:NODE_ENV|PORT|CI|DEBUG)=[^\s;&]+\s+(?:node|npm|npx|vite|next|webpack|jest|vitest)\b/i, why: 'Setting an environment variable before a command this way is Unix shell syntax.' }
   ];

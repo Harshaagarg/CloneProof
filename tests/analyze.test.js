@@ -579,6 +579,12 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       name: 'allows a Windows directory creation command',
       command: 'mkdir output',
       expected: 'PASS'
+    },
+
+    {
+      name: 'detects mkdir -p',
+      command: 'mkdir -p dist/output',
+      expected: 'WARN'
     }
 
       ];
