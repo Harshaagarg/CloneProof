@@ -39,13 +39,84 @@ test('warns about common Unix-only script syntax', () => {
   assert.ok(result.checks.some((item) => item.status === 'WARN' && item.title.includes('Windows shell')));
   fs.rmSync(root, { recursive: true, force: true });
 });
+
+test('does not warn for a basic cross-platform Node.js command', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: {
+        start: 'node app.js'
+      }
+    },
+    readme: '# Demo'
+  });
+
+  const result = analyzeProject(root);
+
+  const windowsCheck = result.checks.find(
+    (item) => item.title.includes('Windows shell')
+  );
+
+  assert.ok(windowsCheck);
+  assert.equal(windowsCheck.status, 'PASS');
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('detects Unix delete command after || in a longer script', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: {
+        clean: 'echo Preparing && echo Cleaning || rm -rf dist'
+      }
+    },
+    readme: '# Demo'
+  });
+  const result = analyzeProject(root);
+
+  const windowsCheck = result.checks.find(
+    (item) => item.title.includes('Windows shell')
+  );
+
+  assert.ok(windowsCheck);
+  assert.equal(windowsCheck.status, 'WARN');
+  assert.match(windowsCheck.detail, /rm -rf/);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
 test('detects Unix-only commands after ||', () => {
-  
+
   const root = makeProject({
     packageJson: {
       name: 'demo',
       scripts: {
         clean: 'echo Cleaning || rm -rf dist'
+      }
+    },
+    readme: '# Demo'
+  });
+
+  const result = analyzeProject(root);
+
+  const windowsCheck = result.checks.find(
+    (item) => item.title.includes('Windows shell')
+  );
+
+  assert.ok(windowsCheck);
+  assert.equal(windowsCheck.status, 'WARN');
+  assert.match(windowsCheck.detail, /rm -rf/);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('detects Unix delete command after a semicolon', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: {
+        clean: 'echo Cleaning; rm -rf dist'
       }
     },
     readme: '# Demo'
@@ -74,6 +145,7 @@ test('warns about Unix-style environment variable assignments', () => {
     },
     readme: '# Demo'
   });
+
 
   const result = analyzeProject(root);
   const windowsCheck = result.checks.find(
