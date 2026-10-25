@@ -65,7 +65,7 @@ function getWindowsFixSuggestion(command) {
     return 'In PowerShell, set an environment variable with $env:NAME = "value".';
   }
 
-  if (/\b(?:grep|sed|awk|chmod|touch|cat)\b/i.test(command)) {
+  if (/\b(?:grep|sed|awk|chmod|touch|cat|cp)\b/i.test(command)) {
     return 'Check whether this utility is available in the target shell, or replace it with a compatible command.';
   }
 
@@ -89,11 +89,11 @@ const patterns = [
     why: '`rm -rf` is a Unix-style delete command.'
   },
   {
-    regex: /(^|&&\s*|\|\|\s*|;\s*|\n)\s*(?:cp|mv)\s+/i,
-    why: '`cp` or `mv` may not be available as written in Windows PowerShell.'
-  },
+  regex: /(?:^|&&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*(?:cp|mv)\s+/i,
+  why: '`cp` or `mv` may not be available as written in Windows PowerShell.'
+},
   {
-    regex: /(?:^|&&\s*|\|\||(?<!\|)\|(?!\|)|;|\n)\s*(?:grep|sed|awk|chmod|touch|cat)\b|(^|&&\s*|\|\|\s*|;\s*|\n)\s*mkdir\s+-p\b/i,
+    regex: /(?:^|&&\s*|\|\||(?<!\|)\|(?!\|)|;|\n)\s*(?:grep|sed|awk|chmod|touch|cat|cp)\b|(^|&&\s*|\|\|\s*|;\s*|\n)\s*mkdir\s+-p\b/i,
     why: 'A Unix utility or option may not be available in Windows PowerShell.'
   },
   {

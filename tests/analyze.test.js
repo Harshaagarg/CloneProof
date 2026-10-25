@@ -725,6 +725,41 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   command: 'node app.js | grep error',
   expected: 'WARN'
 },
+{
+  name: 'detects grep after a single pipe with extra spaces',
+  command: 'node app.js |   grep error',
+  expected: 'WARN'
+},
+{
+  name: 'allows grep mentioned in quoted echo text after a pipe',
+  command: 'echo "example" | echo "grep error"',
+  expected: 'PASS'
+},
+{
+  name: 'detects sed after a single pipe',
+  command: 'cat app.log | sed s/error/warning/',
+  expected: 'WARN'
+},
+{
+  name: 'detects awk after a single pipe',
+  command: 'cat app.log | awk "{print $1}"',
+  expected: 'WARN'
+},
+{
+  name: 'detects chmod after a single pipe',
+  command: 'echo file.txt | chmod +x',
+  expected: 'WARN'
+},
+{
+  name: 'detects touch after a single pipe',
+  command: 'echo file.txt | touch output.txt',
+  expected: 'WARN'
+},
+{
+  name: 'detects cp after a single pipe',
+  command: 'echo file.txt | cp file.txt copy.txt',
+  expected: 'WARN'
+},
   ];
 
   for (const item of cases) {
