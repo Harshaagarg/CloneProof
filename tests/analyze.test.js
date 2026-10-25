@@ -681,6 +681,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       expected: 'WARN'
     },
     {
+  name: 'detects cat after a quoted echo argument and pipe',
+  command: 'echo "Preparing files" | cat README.md',
+  expected: 'WARN'
+},
+    {
       name: 'allows Unix command mentioned in quoted echo text',
       command: 'echo "Do not run rm -rf dist"',
       expected: 'PASS'
