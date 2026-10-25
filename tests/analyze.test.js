@@ -715,6 +715,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   command: 'node app.js "hello world" && rm -rf dist',
   expected: 'WARN'
 },
+{
+  name: 'allows Unix command name as a quoted Windows echo argument',
+  command: 'echo "Please do not run rm -rf dist"',
+  expected: 'PASS'
+},
   ];
 
   for (const item of cases) {
