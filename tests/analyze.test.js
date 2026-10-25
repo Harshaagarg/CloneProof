@@ -679,6 +679,16 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       name: 'detects cat command',
       command: 'cat README.md',
       expected: 'WARN'
+    },
+    {
+      name: 'allows Unix command mentioned in quoted echo text',
+      command: 'echo "Do not run rm -rf dist"',
+      expected: 'PASS'
+    },
+    {
+      name: 'detects Unix delete command on a new line with indentation',
+      command: 'echo Cleaning\n    rm -rf dist',
+      expected: 'WARN'
     }
   ];
 
