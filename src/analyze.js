@@ -44,7 +44,37 @@ function findDocumentedNpmScripts(readmeText) {
   }
   return [...found];
 }
+function getWindowsFixSuggestion(command) {
+  if (/\brm\s+-rf\b/i.test(command)) {
+    return 'Review replacing this with PowerShell Remove-Item -Recurse -Force, after verifying the target path.';
+  }
 
+  if (/\bcp\s+/i.test(command)) {
+    return 'Consider PowerShell Copy-Item, and verify the source and destination paths.';
+  }
+
+  if (/\bmv\s+/i.test(command)) {
+    return 'Consider PowerShell Move-Item, and verify the source and destination paths.';
+  }
+
+  if (/\bmkdir\s+-p\b/i.test(command)) {
+    return 'Consider PowerShell New-Item -ItemType Directory -Force.';
+  }
+
+  if (/\bexport\s+[A-Za-z_][A-Za-z0-9_]*=/i.test(command)) {
+    return 'In PowerShell, set an environment variable with $env:NAME = "value".';
+  }
+
+  if (/\b(?:grep|sed|awk|chmod|touch|cat)\b/i.test(command)) {
+    return 'Check whether this utility is available in the target shell, or replace it with a compatible command.';
+  }
+
+  if (/^\s*(?:NODE_ENV|PORT|CI|DEBUG)=/i.test(command)) {
+    return 'Use shell-specific environment-variable syntax; for PowerShell, set $env:NAME before running the command.';
+  }
+
+  return 'Review this command for Windows shell compatibility and test it before running.';
+}
 function findPotentialWindowsScriptIssues(scripts = {}) {
   const issues = [];
 
@@ -76,7 +106,9 @@ const patterns = [
     if (typeof command !== 'string') continue;
     for (const { regex, why } of patterns) {
       if (regex.test(command)) {
-        issues.push(`Script "${name}": ${why} Command: ${command}`);
+           issues.push(
+          `Script "${name}": ${why} Command: ${command} Suggested fix: ${getWindowsFixSuggestion(command)}`
+        );
         break;
       }
     }

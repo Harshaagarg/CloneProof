@@ -34,9 +34,31 @@ test('flags a README command whose script does not exist', () => {
 });
 
 test('warns about common Unix-only script syntax', () => {
-  const root = makeProject({ packageJson: { name: 'demo', scripts: { clean: 'rm -rf dist' } }, readme: '# Demo' });
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: { clean: 'rm -rf dist' }
+    },
+    readme: '# Demo'
+  });
+
   const result = analyzeProject(root);
-  assert.ok(result.checks.some((item) => item.status === 'WARN' && item.title.includes('Windows shell')));
+
+  const windowsWarning = result.checks.find(
+    (item) => item.status === 'WARN' &&
+      item.title.includes('Windows shell')
+  );
+
+  assert.ok(windowsWarning, 'Expected a Windows shell compatibility warning');
+  assert.ok(
+    windowsWarning.detail.includes('Suggested fix:'),
+    'Expected the warning to include a suggested fix'
+  );
+  assert.ok(
+    windowsWarning.detail.includes('Remove-Item'),
+    'Expected a PowerShell alternative for rm -rf'
+  );
+
   fs.rmSync(root, { recursive: true, force: true });
 });
 
