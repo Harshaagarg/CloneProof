@@ -686,6 +686,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       expected: 'PASS'
     },
 {
+  name: 'allows Unix command text after an escaped quote',
+  command: 'echo "Example: \\" rm -rf dist"',
+  expected: 'PASS'
+},
+{
   name: 'allows Unix command after separator when only quoted echo text',
   command: 'echo "Example: && rm -rf dist"',
   expected: 'PASS'
