@@ -533,11 +533,54 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       command: 'echo Starting && node app.js',
       expected: 'PASS'
     },
+
     {
       name: 'allows a Windows environment variable command',
       command: 'set NODE_ENV=production && node app.js',
       expected: 'PASS'
+    },
+    {
+      name: 'detects chmod after &&',
+      command: 'echo Preparing && chmod +x setup.sh',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects touch after a semicolon',
+      command: 'echo Preparing; touch output.txt',
+      expected: 'WARN'
+    },
+    {
+      name: 'allows a PowerShell-style environment variable',
+      command: '$env:NODE_ENV="production"; node app.js',
+      expected: 'PASS'
+    },
+
+    {
+      name: 'allows a Windows copy command',
+      command: 'copy source.txt destination.txt',
+      expected: 'PASS'
+    },
+    {
+      name: 'detects sed after &&',
+      command: 'echo Preparing && sed -n "1p" file.txt',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects awk after a semicolon',
+      command: 'echo Preparing; awk "{print $1}" file.txt',
+      expected: 'WARN'
+    },
+    {
+      name: 'allows a Windows directory listing',
+      command: 'dir',
+      expected: 'PASS'
+    },
+    {
+      name: 'allows a Windows directory creation command',
+      command: 'mkdir output',
+      expected: 'PASS'
     }
+
       ];
         for (const item of cases) {
     await t.test(item.name, () => {
