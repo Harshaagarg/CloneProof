@@ -741,6 +741,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   expected: 'PASS'
 },
 {
+  name: 'allows sed mentioned in quoted echo text after a pipe',
+  command: 'echo "example" | echo "sed error"',
+  expected: 'PASS'
+},
+{
   name: 'detects sed after a single pipe',
   command: 'cat app.log | sed s/error/warning/',
   expected: 'WARN'
