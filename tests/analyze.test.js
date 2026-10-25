@@ -454,3 +454,112 @@ test('reports when a test script exceeds its timeout', async () => {
   assert.equal(result.success, false);
   assert.match(result.message, /timed out/i);
 });
+
+test('Windows compatibility benchmark: known command patterns', async (t) => {
+  const cases = [
+    {
+      name: 'detects rm -rf',
+      command: 'rm -rf dist',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects rm -rf after &&',
+      command: 'echo Cleaning && rm -rf dist',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects rm -rf after ||',
+      command: 'echo Cleaning || rm -rf dist',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects rm -rf after semicolon',
+      command: 'echo Cleaning; rm -rf dist',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects cp',
+      command: 'cp source.txt destination.txt',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects mv',
+      command: 'mv source.txt destination.txt',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects grep',
+      command: 'grep error log.txt',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects export syntax',
+      command: 'export NODE_ENV=production',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects inline NODE_ENV assignment',
+      command: 'NODE_ENV=production node app.js',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects cp after semicolon',
+      command: 'echo Starting; cp source.txt destination.txt',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects grep after ||',
+      command: 'echo Starting || grep error log.txt',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects export after semicolon',
+      command: 'echo Starting; export NODE_ENV=production',
+      expected: 'WARN'
+    },
+
+    {
+      name: 'allows a basic Node.js command',
+      command: 'node app.js',
+      expected: 'PASS'
+    },
+    {
+      name: 'allows npm test',
+      command: 'npm test',
+      expected: 'PASS'
+    },
+    {
+      name: 'allows a Node command after &&',
+      command: 'echo Starting && node app.js',
+      expected: 'PASS'
+    },
+    {
+      name: 'allows a Windows environment variable command',
+      command: 'set NODE_ENV=production && node app.js',
+      expected: 'PASS'
+    }
+      ];
+        for (const item of cases) {
+    await t.test(item.name, () => {
+      const root = makeProject({
+        packageJson: {
+          name: 'benchmark-demo',
+          scripts: { check: item.command }
+        },
+        readme: '# Benchmark Demo'
+      });
+
+      try {
+        const result = analyzeProject(root);
+        const check = result.checks.find(
+          (entry) => entry.title === 'Scripts reviewed for common Windows shell issues'
+        );
+
+        assert.ok(check, 'Windows shell check should exist');
+        assert.equal(check.status, item.expected);
+      } finally {
+        fs.rmSync(root, { recursive: true, force: true });
+      }
+    });
+  }
+});

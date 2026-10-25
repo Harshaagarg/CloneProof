@@ -47,13 +47,15 @@ function findDocumentedNpmScripts(readmeText) {
 
 function findPotentialWindowsScriptIssues(scripts = {}) {
   const issues = [];
+
   const patterns = [
-        { regex: /(^|&&\s*|\|\|\s*|;\s*)rm\s+-rf\b/i, why: '`rm -rf` is a Unix-style delete command.' },
-    { regex: /(^|&&\s*)(?:cp|mv)\s+/i, why: '`cp` or `mv` may not be available as written in Windows PowerShell.' },
-    { regex: /(^|&&\s*)(?:grep|sed|awk|chmod|touch)\b/i, why: 'A Unix utility may not be available in Windows PowerShell.' },
-    { regex: /(^|&&\s*)export\s+[A-Za-z_][A-Za-z0-9_]*=/i, why: '`export NAME=value` is Unix shell syntax.' },
+    { regex: /(^|&&\s*|\|\|\s*|;\s*)rm\s+-rf\b/i, why: '`rm -rf` is a Unix-style delete command.' },
+    { regex: /(^|&&\s*|\|\|\s*|;\s*)(?:cp|mv)\s+/i, why: '`cp` or `mv` may not be available as written in Windows PowerShell.' },
+    { regex: /(^|&&\s*|\|\|\s*|;\s*)(?:grep|sed|awk|chmod|touch)\b/i, why: 'A Unix utility may not be available in Windows PowerShell.' },
+    { regex: /(^|&&\s*|\|\|\s*|;\s*)export\s+[A-Za-z_][A-Za-z0-9_]*=/i, why: '`export NAME=value` is Unix shell syntax.' },
     { regex: /(^|\s)(?:NODE_ENV|PORT|CI|DEBUG)=[^\s;&]+\s+(?:node|npm|npx|vite|next|webpack|jest|vitest)\b/i, why: 'Setting an environment variable before a command this way is Unix shell syntax.' }
   ];
+
 
   for (const [name, command] of Object.entries(scripts)) {
     if (typeof command !== 'string') continue;
@@ -117,7 +119,7 @@ export function analyzeProject(projectPath) {
     checks.push(check('WARN', 'Remaining checks skipped', 'Fix package.json first; script and dependency checks need a valid package file.'));
     return finish(root, path.basename(root), checks);
   }
-  
+
   // Check whether common package.json fields have valid structures.
   const invalidMetadataFields = [];
 
@@ -145,7 +147,7 @@ export function analyzeProject(projectPath) {
     invalidMetadataFields.push('engines');
   }
 
-  
+
   if (invalidMetadataFields.length > 0) {
     checks.push(
       check(
@@ -155,7 +157,7 @@ export function analyzeProject(projectPath) {
       )
     );
   }
-  
+
   // Check whether dependency version values are strings.
   const dependencyFields = [
     'dependencies',
@@ -253,7 +255,7 @@ export function analyzeProject(projectPath) {
   } else {
     checks.push(check('PASS', 'Dependency lockfile check', 'No dependencies are declared and no lockfile is required for this simple project.'));
   }
-  
+
 
   // Check whether declared dependencies are installed.
   const declaredDependencies = {
@@ -292,7 +294,7 @@ export function analyzeProject(projectPath) {
     );
   }
 
-  
+
   const windowsIssues = findPotentialWindowsScriptIssues(scripts);
   checks.push(windowsIssues.length > 0
     ? check('WARN', 'Scripts reviewed for common Windows shell issues', `${windowsIssues.join(' ')} These are heuristics; review the command before changing it.`)
@@ -380,4 +382,4 @@ const projectName = result.projectName || 'Unnamed Project';
 
 
 
- 
+
