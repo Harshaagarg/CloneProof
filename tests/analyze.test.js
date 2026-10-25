@@ -601,6 +601,12 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       name: 'allows Node.js command with arguments',
       command: 'node src/index.js --help',
       expected: 'PASS'
+    },
+
+    {
+      name: 'detects cat command',
+      command: 'cat README.md',
+      expected: 'WARN'
     }
 
       ];
