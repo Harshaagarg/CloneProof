@@ -534,6 +534,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       command: 'rm -rf dist',
       expected: 'WARN'
     },
+{
+  name: 'detects rm -r',
+  command: 'rm -r dist',
+  expected: 'WARN'
+},
     {
       name: 'detects rm -rf after &&',
       command: 'echo Cleaning && rm -rf dist',

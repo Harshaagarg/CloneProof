@@ -45,14 +45,13 @@ function findDocumentedNpmScripts(readmeText) {
   return [...found];
 }
 function getWindowsFixSuggestion(command) {
-  if (/\brm\s+-rf\b/i.test(command)) {
+  if (/\brm\s+-(?:rf|fr|r|R)\b/i.test(command)) {
     return 'Review replacing this with PowerShell Remove-Item -Recurse -Force, after verifying the target path.';
   }
 
   if (/\bcp\s+/i.test(command)) {
     return 'Consider PowerShell Copy-Item, and verify the source and destination paths.';
   }
-
   if (/\bmv\s+/i.test(command)) {
     return 'Consider PowerShell Move-Item, and verify the source and destination paths.';
   }
@@ -91,10 +90,10 @@ function findPotentialWindowsScriptIssues(scripts = {}) {
 const issues = [];
 
 const patterns = [
-  {
-    regex: /(?:^|&&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*rm\s+-rf\b/i,
-    why: '`rm -rf` is a Unix-style delete command.'
-  },
+ {
+  regex: /(?:^|&&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*rm\s+-(?:rf|fr|r|R)\b/i,
+  why: '`rm` with recursive or force-delete flags is a Unix-style delete command.'
+},
   {
   regex: /(?:^|&&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*(?:cp|mv)\s+/i,
   why: '`cp` or `mv` may not be available as written in Windows PowerShell.'
