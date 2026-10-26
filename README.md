@@ -60,6 +60,13 @@ node src/cli.js sample-project
 ```
 
 Review the PASS, WARN, and FAIL results in the terminal. CloneProof also saves a Markdown report in the current folder.
+To also run the sample project's test script, explicitly enable the execution check:
+
+```powershell
+node src/cli.js sample-project --run-tests
+```
+
+Only use this option on projects you trust, because running an npm script can execute code.
 
 ### 4. Run CloneProof's automated tests
 
