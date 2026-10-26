@@ -735,6 +735,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   expected: 'PASS'
 },
 {
+  name: 'allows rm -rf mentioned in quoted echo text after a pipe',
+  command: 'echo "example text" | node -e "console.log(\'rm -rf dist\')"',
+  expected: 'PASS'
+},
+{
   name: 'detects a real Unix command after a quoted argument',
   command: 'node app.js "hello world" && rm -rf dist',
   expected: 'WARN'
