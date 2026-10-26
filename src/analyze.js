@@ -98,8 +98,8 @@ const patterns = [
     regex: /(^|&&\s*|\|\|\s*|;\s*|\n)\s*export\s+[A-Za-z_][A-Za-z0-9_]*=/i,
     why: '`export NAME=value` is Unix shell syntax.'
   },
-  {
-    regex: /(^|\s)(?:NODE_ENV|PORT|CI|DEBUG)=[^\s;&]+\s+(?:node|npm|npx|vite|next|webpack|jest|vitest)\b/i,
+ {
+    regex: /(^|\s)[A-Za-z_][A-Za-z0-9_]*=[^\s;&]+\s+(?:node|npm|npx|vite|next|webpack|jest|vitest)\b/i,
     why: 'Setting an environment variable before a command this way is Unix shell syntax.'
   }
 ];

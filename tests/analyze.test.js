@@ -585,6 +585,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       expected: 'WARN'
     },
     {
+  name: 'detects inline custom environment variable assignment',
+  command: 'MY_CUSTOM_FLAG=true node app.js',
+  expected: 'WARN'
+},
+    {
       name: 'detects cp after semicolon',
       command: 'echo Starting; cp source.txt destination.txt',
       expected: 'WARN'
