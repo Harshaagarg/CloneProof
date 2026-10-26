@@ -133,20 +133,27 @@ const patterns = [
     if (typeof command !== 'string') continue;
 
     for (const { regex, why } of patterns) {
-    const commandToCheck =
-  why.startsWith('Setting an environment variable')
-    ? removeQuotedText(command)
-    : removeAllQuotedText(command);
+              const shellWrappedCommand = command.replace(
+        /^\s*sh\s+-c\s+(['"])(.*?)\1\s*$/i,
+        '$2'
+      );
 
-if (regex.test(commandToCheck)) {
-  const suggestion = getWindowsFixSuggestion(removeQuotedText(command));
+      const commandToCheck =
+        shellWrappedCommand !== command
+          ? shellWrappedCommand
+          : why.startsWith('Setting an environment variable')
+            ? removeQuotedText(command)
+            : removeAllQuotedText(command);
 
-  issues.push(
-    `Script "${name}": ${why} Command: ${command} Suggested fix: ${suggestion}`
-  );
+      if (regex.test(commandToCheck)) {
+        const suggestion = getWindowsFixSuggestion(removeQuotedText(command));
 
-  break;
-}
+        issues.push(
+          `Script "${name}": ${why} Command: ${command} Suggested fix: ${suggestion}`
+        );
+
+        break;
+      }
     }
   }
 

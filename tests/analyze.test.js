@@ -569,6 +569,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   command: 'echo cleanup |   rm -rf build',
   expected: 'WARN'
 },
+{
+  name: 'detects Unix delete command inside sh -c',
+  command: 'sh -c "rm -rf build"',
+  expected: 'WARN'
+},
     {
       name: 'detects cp',
       command: 'cp source.txt destination.txt',
