@@ -554,6 +554,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   command: 'echo cleanup | rm -rf build',
   expected: 'WARN'
 },
+{
+  name: 'detects rm -rf after a single pipe with extra spaces',
+  command: 'echo cleanup |   rm -rf build',
+  expected: 'WARN'
+},
     {
       name: 'detects cp',
       command: 'cp source.txt destination.txt',
@@ -742,6 +747,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
 {
   name: 'detects a real Unix command after a quoted argument',
   command: 'node app.js "hello world" && rm -rf dist',
+  expected: 'WARN'
+},
+{
+  name: 'detects rm -rf after a quoted argument and pipe',
+  command: 'echo "cleanup target" | rm -rf build',
   expected: 'WARN'
 },
 {
