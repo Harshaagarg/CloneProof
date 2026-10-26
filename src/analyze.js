@@ -96,6 +96,12 @@ function removeQuotedText(command) {
     }
   );
 }
+function removeAllQuotedText(command) {
+  return command.replace(
+    /(["'])(?:\\.|(?!\1)[^\\])*\1/g,
+    ''
+  );
+}
 function findPotentialWindowsScriptIssues(scripts = {}) {
 const issues = [];
 
@@ -127,7 +133,12 @@ const patterns = [
     if (typeof command !== 'string') continue;
 
     for (const { regex, why } of patterns) {
-    if (regex.test(removeQuotedText(command))) {
+    const commandToCheck =
+  why.startsWith('Setting an environment variable')
+    ? removeQuotedText(command)
+    : removeAllQuotedText(command);
+
+if (regex.test(commandToCheck)) {
   const suggestion = getWindowsFixSuggestion(removeQuotedText(command));
 
   issues.push(

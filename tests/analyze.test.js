@@ -734,6 +734,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       command: 'echo "Do not run rm -rf dist"',
       expected: 'PASS'
     },
+   {
+  name: 'allows Unix command text inside a quoted environment variable value',
+ command: '$env:MY_MESSAGE = "please run rm -rf later"; node app.js',
+  expected: 'PASS'
+},
 {
   name: 'allows Unix command text after an escaped quote',
   command: 'echo "Example: \\" rm -rf dist"',
