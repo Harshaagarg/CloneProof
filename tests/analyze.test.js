@@ -860,3 +860,28 @@ test('allows a Windows command on a new line', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+test('does not suggest a Unix fix for quoted command text', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'quoted-command-demo',
+      scripts: {
+        check: 'echo "Do not run rm -rf dist"'
+      }
+    },
+    readme: '# Quoted Command Demo'
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const windowsCheck = result.checks.find(
+      (item) => item.title === 'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(windowsCheck, 'Windows shell check should exist');
+    assert.equal(windowsCheck.status, 'PASS');
+    assert.doesNotMatch(windowsCheck.message ?? '', /Suggested fix:/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

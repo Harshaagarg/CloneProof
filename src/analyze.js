@@ -107,15 +107,20 @@ const patterns = [
 
   for (const [name, command] of Object.entries(scripts)) {
     if (typeof command !== 'string') continue;
+
     for (const { regex, why } of patterns) {
-      if (regex.test(removeQuotedText(command))) {
-           issues.push(
-          `Script "${name}": ${why} Command: ${command} Suggested fix: ${getWindowsFixSuggestion(command)}`
-        );
-        break;
-      }
+    if (regex.test(removeQuotedText(command))) {
+  const suggestion = getWindowsFixSuggestion(removeQuotedText(command));
+
+  issues.push(
+    `Script "${name}": ${why} Command: ${command} Suggested fix: ${suggestion}`
+  );
+
+  break;
+}
     }
   }
+
   return issues;
 }
 
