@@ -65,16 +65,25 @@ function getWindowsFixSuggestion(command) {
     return 'In PowerShell, set an environment variable with $env:NAME = "value".';
   }
 
-  if (/\b(?:grep|sed|awk|chmod|touch|cat|cp)\b/i.test(command)) {
-    return 'Check whether this utility is available in the target shell, or replace it with a compatible command.';
+     if (/\bgrep\b/i.test(command)) {
+    return 'Consider replacing grep with PowerShell Select-String, or use a cross-platform Node.js search script.';
   }
 
-  if (/^\s*(?:NODE_ENV|PORT|CI|DEBUG)=/i.test(command)) {
-    return 'Use shell-specific environment-variable syntax; for PowerShell, set $env:NAME before running the command.';
+  if (/\bsed\b/i.test(command)) {
+    return 'Consider replacing sed with PowerShell string methods or a cross-platform Node.js script.';
+  }
+
+  if (/\bawk\b/i.test(command)) {
+    return 'Consider replacing awk with PowerShell text processing or a cross-platform Node.js script.';
+  }
+
+      if (/\b(?:chmod|touch|cat)\b/i.test(command)) {
+    return 'Check whether this utility is available in the target shell, or replace it with a compatible command.';
   }
 
   return 'Review this command for Windows shell compatibility and test it before running.';
 }
+
 function removeQuotedText(command) {
   return command.replace(/(["'])(?:\\.|(?!\1)[^\\])*?\1/g, '');
 }
