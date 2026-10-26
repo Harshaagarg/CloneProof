@@ -890,3 +890,51 @@ test('does not suggest a Unix fix for quoted command text', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('provides useful Windows fix suggestions for Unix commands', () => {
+  const cases = [
+    {
+      command: 'grep error log.txt',
+      suggestion: 'Select-String'
+    },
+    {
+      command: 'sed -n "1p" file.txt',
+      suggestion: 'PowerShell string methods'
+    },
+    {
+      command: 'awk "{print $1}" file.txt',
+      suggestion: 'PowerShell text processing'
+    }
+  ];
+
+  for (const item of cases) {
+    const root = makeProject({
+      packageJson: {
+        name: 'suggestion-demo',
+        scripts: { check: item.command }
+      },
+      readme: '# Suggestion Demo'
+    });
+
+    try {
+      const result = analyzeProject(root);
+      const check = result.checks.find(
+        (entry) =>
+          entry.title ===
+          'Scripts reviewed for common Windows shell issues'
+      );
+
+      assert.ok(check, 'Windows shell check should exist');
+      assert.equal(check.status, 'WARN');
+      
+        assert.ok(
+  check.detail.includes(item.suggestion),
+  `Expected suggestion "${item.suggestion}" for ${item.command}`
+);
+       
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  }
+});
+
