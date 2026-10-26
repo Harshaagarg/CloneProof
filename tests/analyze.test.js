@@ -550,6 +550,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       expected: 'WARN'
     },
     {
+  name: 'detects rm -rf after a single pipe',
+  command: 'echo cleanup | rm -rf build',
+  expected: 'WARN'
+},
+    {
       name: 'detects cp',
       command: 'cp source.txt destination.txt',
       expected: 'WARN'
@@ -658,7 +663,16 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       command: 'mkdir -p dist/output',
       expected: 'WARN'
     },
-
+    {
+      name: 'detects mkdir -p after a single pipe',
+      command: 'echo setup | mkdir -p build',
+      expected: 'WARN'
+    },
+     {
+      name: 'detects mkdir -p after a single pipe with extra spaces',
+      command: 'echo setup |   mkdir -p build',
+      expected: 'WARN'
+    },
     {
       name: 'allows Windows echo command',
       command: 'echo Hello World',
