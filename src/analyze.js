@@ -82,9 +82,19 @@ function getWindowsFixSuggestion(command) {
 
   return 'Review this command for Windows shell compatibility and test it before running.';
 }
-
 function removeQuotedText(command) {
-  return command.replace(/(["'])(?:\\.|(?!\1)[^\\])*?\1/g, '');
+  return command.replace(
+    /(["'])(?:\\.|(?!\1)[^\\])*\1/g,
+    (quotedText, quote, offset, source) => {
+      // Keep quoted values used in environment assignments, such as NAME="hello world".
+      if (source[offset - 1] === '=') {
+        return quotedText;
+      }
+
+      // Remove other quoted text to avoid false positives.
+      return '';
+    }
+  );
 }
 function findPotentialWindowsScriptIssues(scripts = {}) {
 const issues = [];
@@ -107,7 +117,7 @@ const patterns = [
     why: '`export NAME=value` is Unix shell syntax.'
   },
  {
-    regex: /(^|&&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*[A-Za-z_][A-Za-z0-9_]*=[^\s;&]+\s+[A-Za-z0-9_.-]+\b/i,
+   regex: /(^|&&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*[A-Za-z_][A-Za-z0-9_]*=(?:"[^"]*"|'[^']*'|[^\s;&]+)\s+[A-Za-z0-9_.-]+\b/i,
     why: 'Setting an environment variable before a command this way is Unix shell syntax.'
   }
 ];

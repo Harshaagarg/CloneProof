@@ -604,6 +604,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   command: 'MY_FLAG=true python app.py',
   expected: 'WARN'
 },
+{
+  name: 'detects inline environment assignment with quoted spaces',
+  command: 'MY_FLAG="hello world" python app.py',
+  expected: 'WARN'
+},
     {
       name: 'detects cp after semicolon',
       command: 'echo Starting; cp source.txt destination.txt',
