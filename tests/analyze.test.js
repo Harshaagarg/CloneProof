@@ -534,11 +534,16 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       command: 'rm -rf dist',
       expected: 'WARN'
     },
-{
-  name: 'detects rm -r',
-  command: 'rm -r dist',
-  expected: 'WARN'
-},
+    {
+      name: 'detects rm -r',
+      command: 'rm -r dist',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects rm -fr',
+      command: 'rm -fr dist',
+      expected: 'WARN'
+    },
     {
       name: 'detects rm -rf after &&',
       command: 'echo Cleaning && rm -rf dist',
@@ -592,6 +597,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
     {
   name: 'detects inline custom environment variable assignment',
   command: 'MY_CUSTOM_FLAG=true node app.js',
+  expected: 'WARN'
+},
+{
+  name: 'detects inline environment assignment before python',
+  command: 'MY_FLAG=true python app.py',
   expected: 'WARN'
 },
     {
