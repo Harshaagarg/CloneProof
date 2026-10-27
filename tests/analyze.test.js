@@ -85,6 +85,34 @@ test('does not warn for a basic cross-platform Node.js command', () => {
   fs.rmSync(root, { recursive: true, force: true });
 });
 
+test('warns when a Node.js script references a missing local file', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'broken-demo',
+      scripts: {
+        test: 'node missing-file.js'
+      }
+    },
+    readme: '# Broken Demo'
+  });
+
+  const result = analyzeProject(root);
+
+  const missingFileCheck = result.checks.find(
+    (item) => item.title === 'Local script files exist'
+  );
+
+  assert.ok(
+    missingFileCheck,
+    'Expected a check for local script files'
+  );
+  assert.equal(missingFileCheck.status, 'WARN');
+  assert.ok(missingFileCheck.detail.includes('missing-file.js'));
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+
 test('detects Unix delete command after || in a longer script', () => {
   const root = makeProject({
     packageJson: {

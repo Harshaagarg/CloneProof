@@ -44,6 +44,42 @@ function findDocumentedNpmScripts(readmeText) {
   }
   return [...found];
 }
+
+function findMissingNodeScriptFiles(root, scripts = {}) {
+  const missing = [];
+
+  for (const [scriptName, command] of Object.entries(scripts)) {
+    if (typeof command !== 'string') continue;
+
+    const match = command.match(
+      /^\s*node\s+(?:"([^"]+)"|'([^']+)'|([^\s"'&|;]+))/
+    );
+
+    if (!match) continue;
+
+    const fileName = match[1] || match[2] || match[3];
+
+    if (!/\.(?:c?js|mjs)$/i.test(fileName)) continue;
+    if (/^[a-z]+:/i.test(fileName)) continue;
+
+    const filePath = path.resolve(root, fileName);
+    const relativePath = path.relative(root, filePath);
+
+    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+      continue;
+    }
+
+    if (!fs.existsSync(filePath)) {
+      missing.push(
+        `Script "${scriptName}" references missing file "${fileName}".`
+      );
+    }
+  }
+
+  return missing;
+}
+
+
 function getWindowsFixSuggestion(command) {
   if (/\brm\s+-(?:rf|fr|r|R)\b/i.test(command)) {
     return 'Review replacing this with PowerShell Remove-Item -Recurse -Force, after verifying the target path.';
@@ -328,7 +364,21 @@ export function analyzeProject(projectPath) {
   } else {
     checks.push(check('WARN', 'README npm commands match package.json', 'Skipped because README.md is missing or empty.'));
   }
+  const missingNodeFiles = findMissingNodeScriptFiles(root, scripts);
 
+checks.push(
+  missingNodeFiles.length > 0
+    ? check(
+        'WARN',
+        'Local script files exist',
+        `${missingNodeFiles.join(' ')} Confirm the file path, or add the missing file.`
+      )
+    : check(
+        'PASS',
+        'Local script files exist',
+        'No missing local files were detected in simple Node.js script commands.'
+      )
+);
   const hasNodeVersion = hasNodeVersionDeclaration(root, pkg);
   checks.push(hasNodeVersion
     ? check('PASS', 'Node.js version is documented', `Found a version declaration${pkg.engines?.node ? `: ${pkg.engines.node}` : ' in .nvmrc or .node-version'}.`)
