@@ -835,6 +835,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   expected: 'WARN'
 },
 {
+  name: 'detects grep after a single ampersand with extra spaces',
+  command: 'echo Starting &   grep error log.txt',
+  expected: 'WARN'
+},
+{
   name: 'allows grep mentioned in quoted echo text after a pipe',
   command: 'echo "example" | echo "grep error"',
   expected: 'PASS'
@@ -852,6 +857,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
 {
   name: 'detects sed after a single pipe',
   command: 'cat app.log | sed s/error/warning/',
+  expected: 'WARN'
+},
+{
+  name: 'detects sed after a single ampersand with extra spaces',
+  command: 'echo Starting &   sed s/error/warning/ app.log',
   expected: 'WARN'
 },
 {
