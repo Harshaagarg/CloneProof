@@ -870,6 +870,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   expected: 'WARN'
 },
 {
+  name: 'detects awk after a single ampersand with extra spaces',
+  command: 'echo Starting &   awk "{print $1}" file.txt',
+  expected: 'WARN'
+},
+{
   name: 'detects chmod after a single pipe',
   command: 'echo file.txt | chmod +x',
   expected: 'WARN'
