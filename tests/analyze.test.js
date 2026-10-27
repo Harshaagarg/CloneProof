@@ -790,6 +790,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   expected: 'WARN'
 },
 {
+  name: 'detects Unix delete command after quoted text containing command name',
+  command: 'node app.js "example rm -rf text" && rm -rf dist',
+  expected: 'WARN'
+},
+{
   name: 'detects rm -rf after a quoted argument and pipe',
   command: 'echo "cleanup target" | rm -rf build',
   expected: 'WARN'
