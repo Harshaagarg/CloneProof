@@ -124,7 +124,7 @@ const patterns = [
     why: '`export NAME=value` is Unix shell syntax.'
   },
   {
-    regex: /(^|&&\s*|&\s*|\|\|\s*|;\s*|\n)\s*[A-Za-z_][A-Za-z0-9_]*=(?:"[^"]*"|'[^']*'|[^\s;&]+)\s+[A-Za-z0-9_.-]+\b/i,
+    regex: /(?:^|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*[A-Za-z_][A-Za-z0-9_]*=(?:"[^"]*"|'[^']*'|[^\s;&|]+)\s+[A-Za-z0-9_.-]+\b/i,
     why: 'Setting an environment variable before a command this way is Unix shell syntax.'
   }
 ];
