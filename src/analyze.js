@@ -120,7 +120,7 @@ const patterns = [
     why: 'A Unix utility or option may not be available in Windows PowerShell.'
   },
   {
-    regex: /(^|&&\s*|&\s*|\|\|\s*|;\s*|\n)\s*export\s+[A-Za-z_][A-Za-z0-9_]*=/i,
+    regex: /(?:^|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*export\s+[A-Za-z_][A-Za-z0-9_]*=/i,
     why: '`export NAME=value` is Unix shell syntax.'
   },
   {

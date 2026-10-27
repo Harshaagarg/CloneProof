@@ -644,7 +644,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       command: 'echo Starting; export NODE_ENV=production',
       expected: 'WARN'
     },
-
+{
+  name: 'detects export after a single pipe',
+  command: 'echo Starting | export NODE_ENV=production',
+  expected: 'WARN'
+},
     {
       name: 'allows a basic Node.js command',
       command: 'node app.js',
