@@ -765,6 +765,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   expected: 'PASS'
 },
 {
+  name: 'allows rm -rf text inside quoted echo before ampersand',
+  command: 'echo "Example: rm -rf dist & harmless text"',
+  expected: 'PASS'
+},
+{
   name: 'detects Unix delete command after quoted echo text and separator',
   command: 'echo "Example: && rm -rf dist" && rm -rf build',
   expected: 'WARN'
