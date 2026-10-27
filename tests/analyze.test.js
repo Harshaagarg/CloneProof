@@ -554,6 +554,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   command: 'echo Cleaning & rm -rf dist',
   expected: 'WARN'
 },
+{
+  name: 'detects rm -rf after single ampersand with extra spaces',
+  command: 'echo Cleaning &   rm -rf dist',
+  expected: 'WARN'
+},
     {
       name: 'detects rm -rf after ||',
       command: 'echo Cleaning || rm -rf dist',
