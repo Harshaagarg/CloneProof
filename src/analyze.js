@@ -539,18 +539,37 @@ const projectName = result.projectName || 'Unnamed Project';
     );
   }
 
-  lines.push(
-    '',
-    '## Recommended Next Steps',
-    '',
-    '1. Fix every **FAIL** item before relying on the project.',
-    '2. Review each **WARN** item and decide whether it applies.',
-    '3. For failed tests, inspect the error output and verify dependencies and configuration.',
-    '4. Test the project in a clean Windows environment before claiming Windows compatibility.',
-    '5. Manually verify the application, even when all checks pass.',
-    ''
-  );
+  const nextSteps = [];
 
+if (result.summary.fail > 0) {
+  nextSteps.push('Fix the FAIL findings before relying on the project.');
+}
+
+if (result.summary.warn > 0) {
+  nextSteps.push('Review each WARN finding and decide whether it applies.');
+}
+
+if (result.summary.fail === 0 && result.summary.warn === 0) {
+  nextSteps.push('No issues were detected by the current checks.');
+  nextSteps.push(
+    'This does not guarantee full Windows compatibility. Manually test the application.'
+  );
+} else {
+  nextSteps.push(
+    'Inspect test errors and verify dependencies and configuration where relevant.'
+  );
+  nextSteps.push(
+    'Test in a clean Windows environment before claiming Windows compatibility.'
+  );
+}
+
+lines.push('', '## Recommended Next Steps', '');
+
+nextSteps.forEach((step, index) => {
+  lines.push(`${index + 1}. ${step}`);
+});
+
+lines.push('');
   return lines.join('\n');
 }
 

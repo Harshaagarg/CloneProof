@@ -1110,3 +1110,18 @@ test('detects missing files when Node.js options have separate values', () => {
 
   fs.rmSync(root, { recursive: true, force: true });
 });
+test('gives a clear recommendation when all checks pass', () => {
+  const root = makeProject({
+    packageJson: {
+     name: 'all-pass-demo',
+engines: { node: '>=22' },
+scripts: { test: 'node --test' }
+    }
+  });
+
+  const report = formatMarkdownReport(analyzeProject(root));
+
+  assert.match(report, /No issues were detected by the current checks/i);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
