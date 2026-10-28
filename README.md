@@ -125,6 +125,27 @@ CloneProof-Starter/
 
 The `broken-project` folder is a deliberately faulty example used to observe how CloneProof reports a failed test command.
 
+## Real-World Benchmark Results
+
+CloneProof was evaluated against two public Node.js repositories using static analysis only. Dependencies were not installed, and repository scripts were not executed.
+
+| Repository | Commit | Results |
+|---|---|---|
+| [sindresorhus/is](https://github.com/sindresorhus/is) | `e9c026c611c1160eaad50da00be4e676b626018f` | 6 PASS, 3 WARN, 0 FAIL |
+| [Express](https://github.com/expressjs/express) | `1c6f1b0fe4000977b9a7b4f34097e4d527dd9824` | 6 PASS, 2 WARN, 1 FAIL |
+
+### Observations
+
+- **sindresorhus/is:** The README-command warning needs further interpretation because the current rule did not recognize a common npm test/run command.
+- **Express:** CloneProof identified that the README documents `npm start`, while the project's `package.json` does not define a `start` script.
+- **Lockfiles and dependencies:** Both reports include warnings that must be interpreted in context. Dependencies were not installed, and the benchmark notes record no common lockfile at the repository root.
+
+### Benchmark limitations
+
+These results demonstrate checks on two specific repository snapshots, not overall detection accuracy. The findings may include false positives or missed issues. More repositories, manually verified findings, and broader test cases are needed before making accuracy claims.
+
+Detailed reports and benchmark notes are available in [`benchmark-results/`](benchmark-results/).
+
 ## Current Limitations
 
 - Supports JavaScript/Node.js projects rather than every programming ecosystem.
