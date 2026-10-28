@@ -44,9 +44,26 @@ function findDocumentedNpmScripts(readmeText) {
   }
   return [...found];
 }
-
 function findMissingNodeScriptFiles(root, scripts = {}) {
   const missing = [];
+
+  const optionsWithValues = new Set([
+    '-r',
+    '--require',
+    '-e',
+    '--eval',
+    '-p',
+    '--print',
+    '--import',
+    '--loader',
+    '--experimental-loader',
+    '--conditions',
+    '-C',
+    '--input-type',
+    '--inspect-port',
+    '--title',
+    '--diagnostic-dir'
+  ]);
 
   for (const [scriptName, command] of Object.entries(scripts)) {
     if (typeof command !== 'string') continue;
@@ -65,11 +82,8 @@ function findMissingNodeScriptFiles(root, scripts = {}) {
       }
 
       if (value.startsWith('-')) {
-        if (
-          ['-r', '--require', '-e', '--eval', '-p', '--print',
-           '--import', '--loader', '--experimental-loader'].includes(value)
-        ) {
-          if (tokens.length > 0) tokens.shift();
+        if (optionsWithValues.has(value) && tokens.length > 0) {
+          tokens.shift();
         }
         continue;
       }
@@ -97,6 +111,7 @@ function findMissingNodeScriptFiles(root, scripts = {}) {
 
   return missing;
 }
+
 function getWindowsFixSuggestion(command) {
   if (/\brm\s+-(?:rf|fr|r|R)\b/i.test(command)) {
     return 'Review replacing this with PowerShell Remove-Item -Recurse -Force, after verifying the target path.';

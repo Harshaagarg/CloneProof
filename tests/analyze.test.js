@@ -1088,3 +1088,25 @@ test('detects missing files when Node.js commands include options', () => {
 
   fs.rmSync(root, { recursive: true, force: true });
 });
+
+test('detects missing files when Node.js options have separate values', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'option-value-demo',
+      scripts: {
+        start: 'node --conditions development --watch server.js'
+      }
+    },
+    readme: '# Option Value Demo'
+  });
+
+  const result = analyzeProject(root);
+  const check = result.checks.find(
+    (item) => item.title === 'Local script files exist'
+  );
+
+  assert.equal(check.status, 'WARN');
+  assert.ok(check.detail.includes('server.js'));
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
