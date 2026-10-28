@@ -355,7 +355,7 @@ export function analyzeProject(projectPath) {
     const documentedScripts = findDocumentedNpmScripts(readmeText);
     const missingScripts = documentedScripts.filter((name) => typeof scripts[name] !== 'string');
     if (missingScripts.length > 0) {
-      checks.push(check('FAIL', 'README npm commands match package.json', `README.md mentions script(s) not defined in package.json: ${missingScripts.map((s) => `npm run ${s}`).join(', ')}. Update the instructions or add the missing script(s).`));
+      checks.push(check('FAIL', 'README npm commands match package.json', `README.md mentions script(s) not defined in package.json: ${missingScripts.join(', ')}. Update the instructions or add the missing script(s).`));
     } else if (documentedScripts.length > 0) {
       checks.push(check('PASS', 'README npm commands match package.json', `Checked documented script(s): ${documentedScripts.map((s) => `npm run ${s}`).join(', ')}.`));
     } else {

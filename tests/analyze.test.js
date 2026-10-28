@@ -32,6 +32,23 @@ test('flags a README command whose script does not exist', () => {
   assert.ok(result.checks.some((item) => item.status === 'FAIL' && item.title === 'README npm commands match package.json'));
   fs.rmSync(root, { recursive: true, force: true });
 });
+test('reports missing README scripts without changing command syntax', () => {
+  const root = makeProject({
+    packageJson: { name: 'demo', scripts: { test: 'node --test' } },
+    readme: '# Demo\n\nStart with `npm start`.'
+  });
+
+  const result = analyzeProject(root);
+  const check = result.checks.find(
+    (item) => item.title === 'README npm commands match package.json'
+  );
+
+  assert.equal(check.status, 'FAIL');
+  assert.match(check.detail, /start/);
+assert.doesNotMatch(check.detail, /npm run start/);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
 
 test('warns about common Unix-only script syntax', () => {
   const root = makeProject({
