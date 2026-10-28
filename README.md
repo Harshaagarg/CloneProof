@@ -38,7 +38,7 @@ Downloads:
 
 Extract the project ZIP file and open the `CloneProof-Starter` folder in Visual Studio Code.
 
-Open **Terminal → New Terminal**.
+Open Terminal, then select New Terminal.
 
 ### 2. Verify Node.js and npm
 
