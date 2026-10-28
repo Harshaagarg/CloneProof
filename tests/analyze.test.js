@@ -1067,3 +1067,24 @@ test('provides useful Windows fix suggestions for Unix commands', () => {
   }
 });
 
+test('detects missing files when Node.js commands include options', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'option-demo',
+      scripts: {
+        start: 'node --watch server.js'
+      }
+    },
+    readme: '# Option Demo'
+  });
+
+  const result = analyzeProject(root);
+  const check = result.checks.find(
+    (item) => item.title === 'Local script files exist'
+  );
+
+  assert.equal(check.status, 'WARN');
+  assert.ok(check.detail.includes('server.js'));
+
+  fs.rmSync(root, { recursive: true, force: true });
+});

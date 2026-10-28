@@ -51,15 +51,34 @@ function findMissingNodeScriptFiles(root, scripts = {}) {
   for (const [scriptName, command] of Object.entries(scripts)) {
     if (typeof command !== 'string') continue;
 
-    const match = command.match(
-      /^\s*node\s+(?:"([^"]+)"|'([^']+)'|([^\s"'&|;]+))/
-    );
+    const tokens = command.match(/"[^"]*"|'[^']*'|[^\s]+/g) || [];
+    if (tokens.shift() !== 'node') continue;
 
-    if (!match) continue;
+    let fileName = null;
 
-    const fileName = match[1] || match[2] || match[3];
+    while (tokens.length > 0) {
+      const value = tokens.shift().replace(/^["']|["']$/g, '');
 
-    if (!/\.(?:c?js|mjs)$/i.test(fileName)) continue;
+      if (value === '--') {
+        fileName = tokens.shift()?.replace(/^["']|["']$/g, '') || null;
+        break;
+      }
+
+      if (value.startsWith('-')) {
+        if (
+          ['-r', '--require', '-e', '--eval', '-p', '--print',
+           '--import', '--loader', '--experimental-loader'].includes(value)
+        ) {
+          if (tokens.length > 0) tokens.shift();
+        }
+        continue;
+      }
+
+      fileName = value;
+      break;
+    }
+
+    if (!fileName || !/\.(?:c?js|mjs)$/i.test(fileName)) continue;
     if (/^[a-z]+:/i.test(fileName)) continue;
 
     const filePath = path.resolve(root, fileName);
@@ -78,8 +97,6 @@ function findMissingNodeScriptFiles(root, scripts = {}) {
 
   return missing;
 }
-
-
 function getWindowsFixSuggestion(command) {
   if (/\brm\s+-(?:rf|fr|r|R)\b/i.test(command)) {
     return 'Review replacing this with PowerShell Remove-Item -Recurse -Force, after verifying the target path.';
