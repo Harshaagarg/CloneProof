@@ -50,6 +50,25 @@ assert.doesNotMatch(check.detail, /npm run start/);
   fs.rmSync(root, { recursive: true, force: true });
 });
 
+test('warns when README has no recognized npm script commands', () => {
+  const root = makeProject({
+    packageJson: { name: 'demo', scripts: { test: 'node --test' } },
+    readme: '# Demo'
+  });
+
+  try {
+    const result = analyzeProject(root);
+    const check = result.checks.find(
+      (item) => item.title === 'README contains runnable npm commands'
+    );
+
+    assert.ok(check, 'Expected a README command warning');
+    assert.equal(check.status, 'WARN');
+    assert.match(check.detail, /No familiar npm run\/test\/start commands were detected/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
 test('warns about common Unix-only script syntax', () => {
   const root = makeProject({
     packageJson: {
