@@ -381,6 +381,23 @@ test('explains missing npm packages', async () => {
   assert.match(explanation, /npm package could not be found/i);
   assert.match(explanation, /npm install/i);
 });
+test('explains occupied port errors', () => {
+  const eaddrinuseExplanation = explainFailure(
+    '',
+    'Error: listen EADDRINUSE: address already in use :::3000',
+    ''
+  );
+
+  assert.match(eaddrinuseExplanation, /port may already be occupied/i);
+
+  const addressInUseExplanation = explainFailure(
+    '',
+    'Error: address already in use',
+    ''
+  );
+
+  assert.match(addressInUseExplanation, /port may already be occupied/i);
+});
 test('explains JavaScript module format errors', () => {
   const explanation = explainFailure(
     '',
