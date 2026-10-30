@@ -127,6 +127,53 @@ test('checks compatibility using the .nvmrc file when engines.node is absent', (
 
   fs.rmSync(root, { recursive: true, force: true });
 });
+test('recognizes lts aliases in .nvmrc without claiming compatibility', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.nvmrc': 'lts/*'
+    }
+  });
+
+  const result = analyzeProject(root, 'v24.22.0');
+
+  const compatibilityCheck = result.checks.find(
+    (item) => item.title === 'Node.js version compatibility'
+  );
+
+  assert.equal(compatibilityCheck.status, 'WARN');
+  assert.match(compatibilityCheck.detail, /alias/i);
+  assert.match(compatibilityCheck.detail, /cannot be verified/i);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('recognizes the node alias in .nvmrc without claiming compatibility', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.nvmrc': 'node'
+    }
+  });
+
+  const result = analyzeProject(root, 'v24.22.0');
+
+  const compatibilityCheck = result.checks.find(
+    (item) => item.title === 'Node.js version compatibility'
+  );
+
+  assert.equal(compatibilityCheck.status, 'WARN');
+  assert.match(compatibilityCheck.detail, /alias/i);
+  assert.match(compatibilityCheck.detail, /cannot be verified/i);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
 
 test('detects an incompatible version in .node-version when engines.node is absent', () => {
   const root = makeProject({

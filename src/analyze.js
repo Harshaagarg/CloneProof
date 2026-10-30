@@ -438,11 +438,24 @@ checks.push(
       }
     }
   }
+  const isNvmAlias =
+  versionSource === '.nvmrc' &&
+  /^(?:node|iojs|stable|unstable|lts\/(?:\*|[a-z][a-z0-9-]*))$/i.test(
+    requiredNodeVersion ?? ''
+  );
 
   if (requiredNodeVersion) {
-    const installedNodeVersion = semver.valid(currentNodeVersion);
+  const installedNodeVersion = semver.valid(currentNodeVersion);
 
-    if (!semver.validRange(requiredNodeVersion)) {
+  if (isNvmAlias) {
+    checks.push(
+      check(
+        'WARN',
+        'Node.js version compatibility',
+        `The .nvmrc value "${requiredNodeVersion}" is a recognized nvm alias. Its resolved Node.js version depends on the current nvm configuration and cannot be verified.`
+      )
+    );
+  } else if (!semver.validRange(requiredNodeVersion)) {
       checks.push(
         check(
           'WARN',
