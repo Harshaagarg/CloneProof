@@ -368,6 +368,7 @@ test('explains missing JavaScript modules', async () => {
 
   assert.match(explanation, /module could not be found/i);
   assert.match(explanation, /import path is correct/i);
+  assert.doesNotMatch(explanation, /npm package could not be found/i);
 });
 test('explains missing npm packages', async () => {
   const { explainFailure } = await import('../src/run-check.js');
