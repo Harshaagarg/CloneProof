@@ -150,6 +150,48 @@ test('detects an incompatible version in .node-version when engines.node is abse
 
   fs.rmSync(root, { recursive: true, force: true });
 });
+test('warns when the .nvmrc file is empty', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.nvmrc': ''
+    }
+  });
+
+  const result = analyzeProject(root, 'v24.22.0');
+
+  const documentationCheck = result.checks.find(
+    (item) => item.title === 'Node.js version is documented'
+  );
+
+  assert.equal(documentationCheck.status, 'WARN');
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+test('warns when the .node-version file is empty', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.node-version': ''
+    }
+  });
+
+  const result = analyzeProject(root, 'v24.22.0');
+
+  const documentationCheck = result.checks.find(
+    (item) => item.title === 'Node.js version is documented'
+  );
+
+  assert.equal(documentationCheck.status, 'WARN');
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
 
 test('flags a README command whose script does not exist', () => {
   const root = makeProject({ packageJson: { name: 'demo', scripts: { test: 'node --test' } }, readme: '# Demo\n\nRun `npm run launch`.' });

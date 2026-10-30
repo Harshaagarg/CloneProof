@@ -24,13 +24,14 @@ function readText(filePath) {
 }
 
 function hasNodeVersionDeclaration(root, pkg) {
-  return Boolean(
-    (typeof pkg?.engines?.node === 'string' && pkg.engines.node.trim()) ||
-    fs.existsSync(path.join(root, '.nvmrc')) ||
-    fs.existsSync(path.join(root, '.node-version'))
-  );
-}
+  const enginesNode =
+    typeof pkg?.engines?.node === 'string' && pkg.engines.node.trim();
 
+  const nvmrcVersion = readText(path.join(root, '.nvmrc'))?.trim();
+  const nodeVersion = readText(path.join(root, '.node-version'))?.trim();
+
+  return Boolean(enginesNode || nvmrcVersion || nodeVersion);
+}
 function findDocumentedNpmScripts(readmeText) {
   const found = new Set();
   const runScriptPattern = /\bnpm\s+run\s+([a-zA-Z0-9:_-]+)/g;
