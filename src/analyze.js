@@ -182,11 +182,11 @@ const patterns = [
   },
   {
     regex: /(?:^|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*(?:cp|mv)\s+/i,
-    why: '`cp` or `mv` may not be available as written in Windows PowerShell.'
+    why: '`cp` or `mv` may not be available in the default Windows npm shell (cmd.exe).'
   },
   {
     regex: /(?:^|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*(?:grep|sed|awk|chmod|touch|cat|cp)\b|(?:^|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*mkdir\s+-p\b/i,
-    why: 'A Unix utility or option may not be available in Windows PowerShell.'
+    why: 'A Unix utility or option may not be available in the default Windows npm shell (cmd.exe).'
   },
   {
     regex: /(?:^|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*export\s+[A-Za-z_][A-Za-z0-9_]*=/i,
