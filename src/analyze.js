@@ -416,8 +416,29 @@ checks.push(
   checks.push(hasNodeVersion
     ? check('PASS', 'Node.js version is documented', `Found a version declaration${pkg.engines?.node ? `: ${pkg.engines.node}` : ' in .nvmrc or .node-version'}.`)
     : check('WARN', 'Node.js version is documented', 'No engines.node, .nvmrc, or .node-version was found. State which Node.js versions are supported.'));
+  let requiredNodeVersion = null;
+  let versionSource = null;
+
   if (typeof pkg?.engines?.node === 'string' && pkg.engines.node.trim()) {
-    const requiredNodeVersion = pkg.engines.node.trim();
+    requiredNodeVersion = pkg.engines.node.trim();
+    versionSource = 'package.json engines.node';
+  } else {
+    const nvmrcVersion = readText(path.join(root, '.nvmrc'))?.trim();
+
+    if (nvmrcVersion) {
+      requiredNodeVersion = nvmrcVersion;
+      versionSource = '.nvmrc';
+    } else {
+      const nodeVersionFile = readText(path.join(root, '.node-version'))?.trim();
+
+      if (nodeVersionFile) {
+        requiredNodeVersion = nodeVersionFile;
+        versionSource = '.node-version';
+      }
+    }
+  }
+
+  if (requiredNodeVersion) {
     const installedNodeVersion = semver.valid(currentNodeVersion);
 
     if (!semver.validRange(requiredNodeVersion)) {
@@ -425,7 +446,7 @@ checks.push(
         check(
           'WARN',
           'Node.js version compatibility',
-          `The declared Node.js version range "${requiredNodeVersion}" is invalid and could not be checked.`
+          `The declared Node.js version range "${requiredNodeVersion}" in ${versionSource} is invalid or unsupported and could not be checked.`
         )
       );
     } else if (!installedNodeVersion) {
@@ -441,7 +462,7 @@ checks.push(
         check(
           'PASS',
           'Node.js version compatibility',
-          `Installed Node.js ${installedNodeVersion} satisfies the required range ${requiredNodeVersion}.`
+          `Installed Node.js ${installedNodeVersion} satisfies the required range ${requiredNodeVersion} from ${versionSource}.`
         )
       );
     } else {
@@ -449,7 +470,7 @@ checks.push(
         check(
           'FAIL',
           'Node.js version compatibility',
-          `Installed Node.js ${installedNodeVersion} does not satisfy the required range ${requiredNodeVersion}. Install a compatible Node.js version.`
+          `Installed Node.js ${installedNodeVersion} does not satisfy the required range ${requiredNodeVersion} from ${versionSource}. Install a compatible Node.js version.`
         )
       );
     }

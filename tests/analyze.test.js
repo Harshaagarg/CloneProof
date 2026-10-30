@@ -105,6 +105,51 @@ test('warns when the installed Node.js version cannot be interpreted', () => {
 
   fs.rmSync(root, { recursive: true, force: true });
 });
+test('checks compatibility using the .nvmrc file when engines.node is absent', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.nvmrc': '24.22.0'
+    }
+  });
+
+  const result = analyzeProject(root, 'v24.22.0');
+
+  const compatibilityCheck = result.checks.find(
+    (item) => item.title === 'Node.js version compatibility'
+  );
+
+  assert.equal(compatibilityCheck.status, 'PASS');
+  assert.match(compatibilityCheck.detail, /24\.22\.0/);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('detects an incompatible version in .node-version when engines.node is absent', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.node-version': '20.0.0'
+    }
+  });
+
+  const result = analyzeProject(root, 'v24.22.0');
+
+  const compatibilityCheck = result.checks.find(
+    (item) => item.title === 'Node.js version compatibility'
+  );
+
+  assert.equal(compatibilityCheck.status, 'FAIL');
+  assert.match(compatibilityCheck.detail, /does not satisfy/i);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
 
 test('flags a README command whose script does not exist', () => {
   const root = makeProject({ packageJson: { name: 'demo', scripts: { test: 'node --test' } }, readme: '# Demo\n\nRun `npm run launch`.' });
