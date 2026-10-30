@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import semver from 'semver';
 
 const LOCKFILES = [
   { file: 'package-lock.json', manager: 'npm' },
@@ -233,7 +234,7 @@ const patterns = [
 /**
  * Static checks only: this function reads project files and does not execute them.
  */
-export function analyzeProject(projectPath) {
+export function analyzeProject(projectPath, currentNodeVersion = process.version) {
   const root = path.resolve(projectPath);
   const checks = [];
 
@@ -415,6 +416,44 @@ checks.push(
   checks.push(hasNodeVersion
     ? check('PASS', 'Node.js version is documented', `Found a version declaration${pkg.engines?.node ? `: ${pkg.engines.node}` : ' in .nvmrc or .node-version'}.`)
     : check('WARN', 'Node.js version is documented', 'No engines.node, .nvmrc, or .node-version was found. State which Node.js versions are supported.'));
+  if (typeof pkg?.engines?.node === 'string' && pkg.engines.node.trim()) {
+    const requiredNodeVersion = pkg.engines.node.trim();
+    const installedNodeVersion = semver.valid(currentNodeVersion);
+
+    if (!semver.validRange(requiredNodeVersion)) {
+      checks.push(
+        check(
+          'WARN',
+          'Node.js version compatibility',
+          `The declared Node.js version range "${requiredNodeVersion}" is invalid and could not be checked.`
+        )
+      );
+    } else if (!installedNodeVersion) {
+      checks.push(
+        check(
+          'WARN',
+          'Node.js version compatibility',
+          `The installed Node.js version "${currentNodeVersion}" could not be interpreted.`
+        )
+      );
+    } else if (semver.satisfies(installedNodeVersion, requiredNodeVersion)) {
+      checks.push(
+        check(
+          'PASS',
+          'Node.js version compatibility',
+          `Installed Node.js ${installedNodeVersion} satisfies the required range ${requiredNodeVersion}.`
+        )
+      );
+    } else {
+      checks.push(
+        check(
+          'FAIL',
+          'Node.js version compatibility',
+          `Installed Node.js ${installedNodeVersion} does not satisfy the required range ${requiredNodeVersion}. Install a compatible Node.js version.`
+        )
+      );
+    }
+  }
 
   const presentLockfiles = LOCKFILES.filter(({ file }) => fs.existsSync(path.join(root, file)));
   const dependencyCount = Object.keys(pkg.dependencies ?? {}).length + Object.keys(pkg.devDependencies ?? {}).length;

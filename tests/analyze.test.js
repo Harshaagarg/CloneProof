@@ -25,6 +25,86 @@ test('passes basic checks for a well-documented project', () => {
   assert.ok(result.checks.some((item) => item.title === 'README npm commands match package.json' && item.status === 'PASS'));
   fs.rmSync(root, { recursive: true, force: true });
 });
+test('passes when installed Node.js version satisfies the required range', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      engines: { node: '>=22' },
+      scripts: { test: 'node --test' }
+    }
+  });
+
+  const result = analyzeProject(root, 'v24.22.0');
+
+  const compatibilityCheck = result.checks.find(
+    (item) => item.title === 'Node.js version compatibility'
+  );
+
+  assert.equal(compatibilityCheck.status, 'PASS');
+  assert.match(compatibilityCheck.detail, /satisfies the required range/i);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+test('fails when installed Node.js version does not satisfy the required range', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      engines: { node: '>=22' },
+      scripts: { test: 'node --test' }
+    }
+  });
+
+  const result = analyzeProject(root, 'v20.0.0');
+
+  const compatibilityCheck = result.checks.find(
+    (item) => item.title === 'Node.js version compatibility'
+  );
+
+  assert.equal(compatibilityCheck.status, 'FAIL');
+  assert.match(compatibilityCheck.detail, /does not satisfy the required range/i);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+test('warns when the declared Node.js version range is invalid', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      engines: { node: '>=not-a-version' },
+      scripts: { test: 'node --test' }
+    }
+  });
+
+  const result = analyzeProject(root, 'v24.22.0');
+
+  const compatibilityCheck = result.checks.find(
+    (item) => item.title === 'Node.js version compatibility'
+  );
+
+  assert.equal(compatibilityCheck.status, 'WARN');
+  assert.match(compatibilityCheck.detail, /range.*invalid/i);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+test('warns when the installed Node.js version cannot be interpreted', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      engines: { node: '>=22' },
+      scripts: { test: 'node --test' }
+    }
+  });
+
+  const result = analyzeProject(root, 'not-a-version');
+
+  const compatibilityCheck = result.checks.find(
+    (item) => item.title === 'Node.js version compatibility'
+  );
+
+  assert.equal(compatibilityCheck.status, 'WARN');
+  assert.match(compatibilityCheck.detail, /could not be interpreted/i);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
 
 test('flags a README command whose script does not exist', () => {
   const root = makeProject({ packageJson: { name: 'demo', scripts: { test: 'node --test' } }, readme: '# Demo\n\nRun `npm run launch`.' });
