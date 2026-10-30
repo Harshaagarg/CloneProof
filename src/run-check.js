@@ -22,12 +22,12 @@ export function explainFailure(stdout, stderr, message) {
     output.includes('err_module_not_found')
   ) {
     if (
-      output.includes('cannot find package') ||
-      output.includes("can't find package")
-    ) {
-      return 'An npm package could not be found. Run npm install in the project folder, then check that the package is listed in package.json.';
-    }
-
+    output.includes('cannot find package') ||
+    output.includes("can't find package") ||
+    /cannot find module\s+['"](?!(?:\.{1,2}[\\/]|[\\/]|[a-z]:[\\/]|node:))[^'"]+['"]/i.test(output)
+  ) {
+    return 'An npm package could not be found. Run npm install in the project folder, then check that the package is listed in package.json.';
+  }
     return 'A JavaScript module could not be found. Check whether the referenced file exists and whether the import path is correct. If the missing module is an npm package, run npm install.';
   }
 

@@ -382,6 +382,18 @@ test('explains missing npm packages', async () => {
   assert.match(explanation, /npm package could not be found/i);
   assert.match(explanation, /npm install/i);
 });
+test('explains missing npm packages in CommonJS projects', async () => {
+  const { explainFailure } = await import('../src/run-check.js');
+
+  const explanation = explainFailure(
+    '',
+    "Error: Cannot find module 'express'\nRequire stack:\n- app.js",
+    'npm run test exited with code 1.'
+  );
+
+  assert.match(explanation, /npm package could not be found/i);
+  assert.match(explanation, /npm install/i);
+});
 test('explains when a command cannot be started', () => {
   const explanation = explainFailure(
     '',
