@@ -381,6 +381,15 @@ test('explains missing npm packages', async () => {
   assert.match(explanation, /npm package could not be found/i);
   assert.match(explanation, /npm install/i);
 });
+test('explains when a command cannot be started', () => {
+  const explanation = explainFailure(
+    '',
+    'Error: spawn npm ENOENT',
+    'Could not start the script: spawn npm ENOENT'
+  );
+
+  assert.match(explanation, /command|executable|could not be started/i);
+});
 test('explains occupied port errors', () => {
   const eaddrinuseExplanation = explainFailure(
     '',

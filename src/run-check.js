@@ -9,6 +9,12 @@ import { spawn } from 'node:child_process';
 
 export function explainFailure(stdout, stderr, message) {
   const output = `${stderr}\n${stdout}\n${message}`.toLowerCase();
+  if (
+    output.includes('spawn enoent') ||
+    output.includes('could not start the script:')
+  ) {
+    return 'A command or executable could not be started. Check that the required program is installed and available on PATH.';
+  }
 
      if (
     output.includes('cannot find module') ||
