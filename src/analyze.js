@@ -417,6 +417,53 @@ checks.push(
   checks.push(hasNodeVersion
     ? check('PASS', 'Node.js version is documented', `Found a version declaration${pkg.engines?.node ? `: ${pkg.engines.node}` : ' in .nvmrc or .node-version'}.`)
     : check('WARN', 'Node.js version is documented', 'No engines.node, .nvmrc, or .node-version was found. State which Node.js versions are supported.'));
+  const versionDeclarations = [
+    {
+      source: 'package.json engines.node',
+      value: typeof pkg?.engines?.node === 'string'
+        ? pkg.engines.node.trim()
+        : ''
+    },
+    {
+      source: '.nvmrc',
+      value: readText(path.join(root, '.nvmrc'))?.trim() || ''
+    },
+    {
+      source: '.node-version',
+      value: readText(path.join(root, '.node-version'))?.trim() || ''
+    }
+  ].filter((item) => item.value);
+
+  const exactVersions = versionDeclarations
+    .map((item) => ({
+      ...item,
+      normalizedVersion: semver.valid(item.value)
+    }))
+    .filter((item) => item.normalizedVersion);
+
+  const distinctVersions = [
+    ...new Set(exactVersions.map((item) => item.normalizedVersion))
+  ];
+
+  if (distinctVersions.length > 1) {
+    checks.push(
+      check(
+        'WARN',
+        'Exact Node.js version declarations are consistent',
+        `Conflicting exact Node.js versions were found: ${exactVersions
+          .map((item) => `${item.source} declares ${item.value}`)
+          .join('; ')}. Align these declarations to avoid inconsistent environments.`
+      )
+    );
+  } else {
+    checks.push(
+      check(
+        'PASS',
+        'Exact Node.js version declarations are consistent',
+        'No conflicting exact Node.js versions were found in the available declarations.'
+      )
+    );
+  }
   let requiredNodeVersion = null;
   let versionSource = null;
 

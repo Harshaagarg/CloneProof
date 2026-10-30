@@ -153,6 +153,105 @@ test('prioritizes package.json engines.node over other version files', () => {
 
   fs.rmSync(root, { recursive: true, force: true });
 });
+test('warns when Node.js version declarations conflict', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      engines: {
+        node: '20.19.0'
+      },
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.nvmrc': '24.22.0',
+      '.node-version': '24.22.0'
+    }
+  });
+
+  const result = analyzeProject(root, 'v20.19.0');
+
+  const consistencyCheck = result.checks.find(
+    (item) => item.title === 'Exact Node.js version declarations are consistent'
+  );
+
+  assert.ok(consistencyCheck);
+  assert.equal(consistencyCheck.status, 'WARN');
+  assert.match(consistencyCheck.detail, /20\.19\.0/);
+  assert.match(consistencyCheck.detail, /24\.22\.0/);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+test('does not flag equivalent exact Node.js versions as conflicting', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      engines: { node: 'v24.22.0' },
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.nvmrc': '24.22.0'
+    }
+  });
+
+  const result = analyzeProject(root, 'v24.22.0');
+
+  const consistencyCheck = result.checks.find(
+    (item) => item.title === 'Exact Node.js version declarations are consistent'
+  );
+
+  assert.ok(consistencyCheck);
+  assert.equal(consistencyCheck.status, 'PASS');
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('does not flag different Node.js version ranges as exact conflicts', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      engines: { node: '>=20 <22' },
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.nvmrc': 'lts/*'
+    }
+  });
+
+  const result = analyzeProject(root, 'v20.19.0');
+
+  const consistencyCheck = result.checks.find(
+    (item) => item.title === 'Exact Node.js version declarations are consistent'
+  );
+
+  assert.ok(consistencyCheck);
+  assert.equal(consistencyCheck.status, 'PASS');
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+test('does not flag an nvm alias as an exact version conflict', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.nvmrc': 'lts/*',
+      '.node-version': '24.22.0'
+    }
+  });
+
+  const result = analyzeProject(root, 'v24.22.0');
+
+  const consistencyCheck = result.checks.find(
+    (item) => item.title === 'Exact Node.js version declarations are consistent'
+  );
+
+  assert.ok(consistencyCheck);
+  assert.equal(consistencyCheck.status, 'PASS');
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
 test('prioritizes .nvmrc over .node-version when engines.node is absent', () => {
   const root = makeProject({
     packageJson: {
