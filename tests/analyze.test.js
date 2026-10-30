@@ -875,6 +875,21 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
       expected: 'WARN'
     },
     {
+      name: 'detects multiple Unix commands in a build script',
+      command: 'rm -rf dist && mkdir -p dist && cp source.txt dist/',
+      expected: 'WARN'
+    },
+    {
+      name: 'detects Unix environment assignment in a startup script',
+      command: 'export NODE_ENV=production && node server.js',
+      expected: 'WARN'
+    },
+    {
+      name: 'allows a combined cross-platform Node.js build script',
+      command: 'echo Building && node scripts/build.js && echo Done',
+      expected: 'PASS'
+    },
+    {
       name: 'detects grep after ||',
       command: 'echo Starting || grep error log.txt',
       expected: 'WARN'
