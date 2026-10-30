@@ -322,6 +322,30 @@ test('recognizes the node alias in .nvmrc without claiming compatibility', () =>
 
   fs.rmSync(root, { recursive: true, force: true });
 });
+test('warns when engines.node is not a string', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      scripts: { test: 'node --test' },
+      engines: {
+        node: 24
+      }
+    }
+  });
+
+  const result = analyzeProject(root);
+
+  assert.ok(
+    result.checks.some(
+      (item) =>
+        item.status === 'WARN' &&
+        item.title === 'package.json Node.js version metadata'
+    ),
+    'Expected a warning for a non-string engines.node value'
+  );
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
 
 test('detects an incompatible version in .node-version when engines.node is absent', () => {
   const root = makeProject({

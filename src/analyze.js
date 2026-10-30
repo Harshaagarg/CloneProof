@@ -309,7 +309,22 @@ export function analyzeProject(projectPath, currentNodeVersion = process.version
   ) {
     invalidMetadataFields.push('engines');
   }
-
+  if (
+    pkg.engines !== undefined &&
+    pkg.engines !== null &&
+    typeof pkg.engines === 'object' &&
+    !Array.isArray(pkg.engines) &&
+    pkg.engines.node !== undefined &&
+    typeof pkg.engines.node !== 'string'
+  ) {
+    checks.push(
+      check(
+        'WARN',
+        'package.json Node.js version metadata',
+        'The engines.node field should be a string containing a Node.js version range. Correct this value so compatibility can be checked accurately.'
+      )
+    );
+  }
 
   if (invalidMetadataFields.length > 0) {
     checks.push(
