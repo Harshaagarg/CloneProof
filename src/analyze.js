@@ -479,6 +479,35 @@ checks.push(
       )
     );
   }
+  const exactRangeConflicts = [];
+
+  const rangeDeclarations = versionDeclarations
+    .filter((item) => !semver.valid(item.value))
+    .filter((item) => semver.validRange(item.value));
+
+  for (const exact of exactVersions) {
+    for (const range of rangeDeclarations) {
+      if (!semver.satisfies(exact.normalizedVersion, range.value)) {
+        exactRangeConflicts.push(
+          `${exact.source} declares ${exact.value}, but ${range.source} declares ${range.value}`
+        );
+      }
+    }
+  }
+
+  checks.push(
+    exactRangeConflicts.length > 0
+      ? check(
+          'WARN',
+          'Node.js version declarations are compatible',
+          `Conflicting exact-version and range declarations were found: ${exactRangeConflicts.join('; ')}. Align these declarations to avoid inconsistent environments.`
+        )
+      : check(
+          'PASS',
+          'Node.js version declarations are compatible',
+          'No conflicts were found between exact Node.js versions and version ranges.'
+        )
+  );
   let requiredNodeVersion = null;
   let versionSource = null;
 

@@ -228,6 +228,54 @@ test('does not flag different Node.js version ranges as exact conflicts', () => 
 
   fs.rmSync(root, { recursive: true, force: true });
 });
+test('warns when an exact Node.js version conflicts with engines.node range', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      engines: { node: '>=20 <22' },
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.nvmrc': '24.22.0'
+    }
+  });
+
+  const result = analyzeProject(root, 'v24.22.0');
+
+  const consistencyCheck = result.checks.find(
+    (item) => item.title === 'Node.js version declarations are compatible'
+  );
+
+  assert.ok(consistencyCheck);
+  assert.equal(consistencyCheck.status, 'WARN');
+  assert.match(consistencyCheck.detail, /engines\.node/i);
+  assert.match(consistencyCheck.detail, /\.nvmrc/i);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+test('does not warn when an exact Node.js version satisfies engines.node range', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      engines: { node: '>=20 <22' },
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.nvmrc': '20.19.0'
+    }
+  });
+
+  const result = analyzeProject(root, 'v20.19.0');
+
+  const consistencyCheck = result.checks.find(
+    (item) => item.title === 'Node.js version declarations are compatible'
+  );
+
+  assert.ok(consistencyCheck);
+  assert.equal(consistencyCheck.status, 'PASS');
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
 test('does not flag an nvm alias as an exact version conflict', () => {
   const root = makeProject({
     packageJson: {
