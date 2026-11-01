@@ -1575,6 +1575,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   command: 'echo file.txt | cp file.txt copy.txt',
   expected: 'WARN'
 },
+{
+  name: 'allows grep inside a quoted Windows folder path',
+  command: 'node app.js "C:\\Users\\Harsha\\grep\\project"',
+  expected: 'PASS'
+},
   ];
 
   for (const item of cases) {
