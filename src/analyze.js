@@ -122,6 +122,7 @@ function getWindowsFixSuggestion(command) {
   if (/\bcp\s+/i.test(command)) {
     return 'Consider PowerShell Copy-Item, and verify the source and destination paths.';
   }
+
   if (/\bmv\s+/i.test(command)) {
     return 'Consider PowerShell Move-Item, and verify the source and destination paths.';
   }
@@ -134,19 +135,19 @@ function getWindowsFixSuggestion(command) {
     return 'In PowerShell, set an environment variable with $env:NAME = "value".';
   }
 
-     if (/\bgrep\b/i.test(command)) {
-    return 'Consider replacing grep with PowerShell Select-String, or use a cross-platform Node.js search script.';
+  if (/\bgrep\b/i.test(command)) {
+    return 'Replace grep with PowerShell Select-String -Path <file> -Pattern <text> to search file contents.';
   }
 
   if (/\bsed\b/i.test(command)) {
-    return 'Consider replacing sed with PowerShell string methods or a cross-platform Node.js script.';
+    return 'Consider PowerShell string methods such as -replace for text replacement; use Get-Content -Raw and Set-Content when updating files.';
   }
 
   if (/\bawk\b/i.test(command)) {
-    return 'Consider replacing awk with PowerShell text processing or a cross-platform Node.js script.';
+    return 'Consider PowerShell text processing with ForEach-Object for line processing, or Import-Csv for CSV data.';
   }
 
-      if (/\b(?:chmod|touch|cat)\b/i.test(command)) {
+  if (/\b(?:chmod|touch|cat)\b/i.test(command)) {
     return 'Check whether this utility is available in the target shell, or replace it with a compatible command.';
   }
 
