@@ -1226,6 +1226,31 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   command: '(rm -rf dist)',
   expected: 'WARN'
 },
+{
+  name: 'detects cp inside parentheses',
+  command: '(cp source.txt destination.txt)',
+  expected: 'WARN'
+},
+{
+  name: 'detects grep inside parentheses',
+  command: '(grep error log.txt)',
+  expected: 'WARN'
+},
+{
+  name: 'detects mkdir -p inside parentheses',
+  command: '(mkdir -p build)',
+  expected: 'WARN'
+},
+{
+  name: 'detects export syntax inside parentheses',
+  command: '(export NODE_ENV=test)',
+  expected: 'WARN'
+},
+{
+  name: 'detects inline environment assignment inside parentheses',
+  command: '(NODE_ENV=test node app.js)',
+  expected: 'WARN'
+},
     {
       name: 'detects cp',
       command: 'cp source.txt destination.txt',
