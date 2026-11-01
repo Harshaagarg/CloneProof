@@ -1217,6 +1217,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   expected: 'WARN'
 },
 {
+  name: 'allows Unix command text inside quoted echo within sh -c',
+  command: `sh -c "echo 'example && rm -rf dist'"`,
+  expected: 'PASS'
+},
+{
   name: 'detects Unix delete command inside nested sh -c',
   command: `sh -c "sh -c 'rm -rf build'"`,
   expected: 'WARN'

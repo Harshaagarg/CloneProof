@@ -221,11 +221,9 @@ while (true) {
   shellWrappedCommand = unwrappedCommand;
       }
       const commandToCheck =
-        shellWrappedCommand !== command
-          ? shellWrappedCommand
-          : why.startsWith('Setting an environment variable')
-            ? removeQuotedText(command)
-            : removeAllQuotedText(command);
+        why.startsWith('Setting an environment variable')
+          ? removeQuotedText(shellWrappedCommand)
+          : removeAllQuotedText(shellWrappedCommand);
 
       if (regex.test(commandToCheck)) {
         const suggestion = getWindowsFixSuggestion(removeQuotedText(command));
