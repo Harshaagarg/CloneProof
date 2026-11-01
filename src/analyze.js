@@ -485,6 +485,19 @@ checks.push(
   const rangeDeclarations = versionDeclarations
     .filter((item) => !semver.valid(item.value))
     .filter((item) => semver.validRange(item.value));
+    const invalidDeclarations = versionDeclarations.filter((item) => {
+    const isNvmAlias =
+      item.source === '.nvmrc' &&
+      /^(?:node|iojs|stable|unstable|lts\/(?:\*|[a-z][a-z0-9-]*))$/i.test(
+        item.value
+      );
+
+    return (
+      !semver.valid(item.value) &&
+      !semver.validRange(item.value) &&
+      !isNvmAlias
+    );
+  });
 
   for (const exact of exactVersions) {
     for (const range of rangeDeclarations) {
@@ -510,13 +523,16 @@ checks.push(
   }
 
   checks.push(
-    exactRangeConflicts.length > 0 || rangeRangeConflicts.length > 0
+    exactRangeConflicts.length > 0 ||
+    rangeRangeConflicts.length > 0 ||
+    invalidDeclarations.length > 0
       ? check(
           'WARN',
           'Node.js version declarations are compatible',
           `Conflicting Node.js version declarations were found: ${[
             ...exactRangeConflicts,
-            ...rangeRangeConflicts
+            ...rangeRangeConflicts,
+            ...invalidDeclarations.map((item) => `${item.source} declares invalid value "${item.value}"`)
           ].join('; ')}. Align these declarations to avoid inconsistent environments.`
         )
       : check(

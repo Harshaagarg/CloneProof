@@ -153,6 +153,33 @@ test('prioritizes package.json engines.node over other version files', () => {
 
   fs.rmSync(root, { recursive: true, force: true });
 });
+test('warns when a lower-priority Node.js version declaration is invalid', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'demo',
+      engines: {
+        node: '>=20 <21'
+      },
+      scripts: { test: 'node --test' }
+    },
+    extraFiles: {
+      '.nvmrc': 'not-a-version'
+    }
+  });
+
+  const result = analyzeProject(root, 'v20.19.0');
+
+  const consistencyCheck = result.checks.find(
+    (item) => item.title === 'Node.js version declarations are compatible'
+  );
+
+  assert.ok(consistencyCheck);
+  assert.equal(consistencyCheck.status, 'WARN');
+  assert.match(consistencyCheck.detail, /\.nvmrc/i);
+  assert.match(consistencyCheck.detail, /invalid/i);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
 test('warns when Node.js version declarations conflict', () => {
   const root = makeProject({
     packageJson: {
