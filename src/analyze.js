@@ -179,23 +179,23 @@ const issues = [];
 
 const patterns = [
   {
-    regex: /(?:^|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*rm\s+-(?:rf|fr|r|R)\b/i,
+    regex: /(?:^|\(\s*|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*rm\s+-(?:rf|fr|r|R)\b/i,
     why: '`rm` with recursive or force-delete flags is a Unix-style delete command.'
   },
   {
-    regex: /(?:^|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*(?:cp|mv)\s+/i,
+    regex: /(?:^|\(\s*|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*(?:cp|mv)\s+/i,
     why: '`cp` or `mv` may not be available in the default Windows npm shell (cmd.exe).'
   },
   {
-    regex: /(?:^|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*(?:grep|sed|awk|chmod|touch|cat|cp)\b|(?:^|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*mkdir\s+-p\b/i,
+    regex: /(?:^|\(\s*|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*(?:grep|sed|awk|chmod|touch|cat|cp)\b|(?:^|\(\s*|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*mkdir\s+-p\b/i,
     why: 'A Unix utility or option may not be available in the default Windows npm shell (cmd.exe).'
   },
   {
-    regex: /(?:^|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*export\s+[A-Za-z_][A-Za-z0-9_]*=/i,
+    regex: /(?:^|\(\s*|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*export\s+[A-Za-z_][A-Za-z0-9_]*=/i,
     why: '`export NAME=value` is Unix shell syntax.'
   },
   {
-    regex: /(?:^|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*[A-Za-z_][A-Za-z0-9_]*=(?:"[^"]*"|'[^']*'|[^\s;&|]+)\s+[A-Za-z0-9_.-]+\b/i,
+    regex: /(?:^|\(\s*|&&\s*|&\s*|\|\|\s*|(?<!\|)\|(?!\|)|;\s*|\n)\s*[A-Za-z_][A-Za-z0-9_]*=(?:"[^"]*"|'[^']*'|[^\s;&|]+)\s+[A-Za-z0-9_.-]+\b/i,
     why: 'Setting an environment variable before a command this way is Unix shell syntax.'
   }
 ];

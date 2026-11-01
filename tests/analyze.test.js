@@ -1221,6 +1221,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   command: `sh -c "sh -c 'rm -rf build'"`,
   expected: 'WARN'
 },
+{
+  name: 'detects Unix delete command inside parentheses',
+  command: '(rm -rf dist)',
+  expected: 'WARN'
+},
     {
       name: 'detects cp',
       command: 'cp source.txt destination.txt',
