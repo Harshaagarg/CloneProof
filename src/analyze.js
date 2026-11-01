@@ -206,11 +206,20 @@ const patterns = [
     if (typeof command !== 'string') continue;
 
     for (const { regex, why } of patterns) {
-              const shellWrappedCommand = command.replace(
-        /^\s*sh\s+-c\s+(['"])(.*?)\1\s*$/i,
-        '$2'
-      );
+              let shellWrappedCommand = command;
 
+while (true) {
+  const unwrappedCommand = shellWrappedCommand.replace(
+    /^\s*sh\s+-c\s+(['"])(.*?)\1\s*$/i,
+    '$2'
+  );
+
+  if (unwrappedCommand === shellWrappedCommand) {
+    break;
+  }
+
+  shellWrappedCommand = unwrappedCommand;
+      }
       const commandToCheck =
         shellWrappedCommand !== command
           ? shellWrappedCommand
