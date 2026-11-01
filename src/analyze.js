@@ -479,6 +479,7 @@ checks.push(
       )
     );
   }
+  const rangeRangeConflicts = [];
   const exactRangeConflicts = [];
 
   const rangeDeclarations = versionDeclarations
@@ -495,12 +496,28 @@ checks.push(
     }
   }
 
+  for (let i = 0; i < rangeDeclarations.length; i++) {
+    for (let j = i + 1; j < rangeDeclarations.length; j++) {
+      const first = rangeDeclarations[i];
+      const second = rangeDeclarations[j];
+
+      if (!semver.intersects(first.value, second.value)) {
+        rangeRangeConflicts.push(
+          `${first.source} declares ${first.value}, but ${second.source} declares ${second.value}`
+        );
+      }
+    }
+  }
+
   checks.push(
-    exactRangeConflicts.length > 0
+    exactRangeConflicts.length > 0 || rangeRangeConflicts.length > 0
       ? check(
           'WARN',
           'Node.js version declarations are compatible',
-          `Conflicting exact-version and range declarations were found: ${exactRangeConflicts.join('; ')}. Align these declarations to avoid inconsistent environments.`
+          `Conflicting Node.js version declarations were found: ${[
+            ...exactRangeConflicts,
+            ...rangeRangeConflicts
+          ].join('; ')}. Align these declarations to avoid inconsistent environments.`
         )
       : check(
           'PASS',
@@ -508,6 +525,7 @@ checks.push(
           'No conflicts were found between exact Node.js versions and version ranges.'
         )
   );
+
   let requiredNodeVersion = null;
   let versionSource = null;
 
