@@ -40,16 +40,26 @@ Extract the project ZIP file and open the `CloneProof-Starter` folder in Visual 
 
 Open Terminal, then select New Terminal.
 
-### 2. Verify Node.js and npm
+### 2. Verify Node.js and install dependencies
 
-Run:
+Open a terminal in the CloneProof project root and check your Node.js version:
 
 ```powershell
 node --version
-npm --version
+npm.cmd --version
 ```
 
-Both commands should print version numbers.
+Make sure Node.js 22 or newer is installed.
+
+Install the project's dependencies:
+
+```powershell
+npm.cmd install
+```
+
+PowerShell users can use `npm.cmd` if the `npm` command is blocked by execution-policy restrictions.
+
+Installing dependencies prepares CloneProof for running its checks and automated tests.
 
 ### 3. Run CloneProof on the included sample
 
@@ -67,6 +77,48 @@ node src/cli.js sample-project --run-tests
 ```
 
 Only use this option on projects you trust, because running an npm script can execute code.
+
+#### CLI options and usage
+#### CLI options and usage
+
+CloneProof accepts an optional project path, an optional Markdown report destination, and the `--run-tests` flag.
+
+To display the built-in help message:
+
+```powershell
+node src/cli.js --help
+```
+
+To analyze the included sample project:
+
+```powershell
+node src/cli.js sample-project
+```
+
+To save the report to a custom location:
+
+```powershell
+node src/cli.js sample-project my-report.md
+```
+
+To analyze a project and explicitly execute its npm test script:
+
+```powershell
+node src/cli.js sample-project my-report.md --run-tests
+```
+
+**Available options:**
+
+| Option | Description |
+|---|---|
+| `--help` | Displays usage instructions and exits without analyzing a project. |
+| `--run-tests` | Runs the target project's npm test script. Only use with trusted projects. |
+
+If no project path is supplied, CloneProof analyzes `./sample-project`. If no report path is supplied, it writes `./cloneproof-report.md`.
+
+CloneProof also reports errors for unknown `--` options and for more than two positional arguments.
+
+**Safety:** By default, CloneProof performs static analysis only. Project scripts are not executed unless `--run-tests` is explicitly provided.
 
 ### 4. Run CloneProof's automated tests
 
@@ -158,11 +210,28 @@ Detailed reports and benchmark notes are available in [`benchmark-results/`](ben
 
 ## Roadmap
 
-1. Expand automated tests for real-world configuration and execution failures.
-2. Improve diagnostic accuracy and distinguish missing local files from missing npm packages.
-3. Improve package-manager detection and Windows compatibility checks.
-4. Improve the developer experience and report formatting.
-5. Validate the tool against more real-world projects and document its limitations.
+### Implemented
+
+- [x] Analyze Node.js project configuration and setup instructions.
+- [x] Detect common Windows-incompatible shell commands.
+- [x] Check Node.js version declarations and identify conflicts.
+- [x] Identify missing dependencies and referenced local files.
+- [x] Explain common project setup and execution failures.
+- [x] Generate Markdown diagnostic reports.
+- [x] Provide optional npm test execution with `--run-tests`.
+- [x] Provide CLI help and argument validation.
+- [x] Add automated regression tests and Windows CI coverage.
+
+### Planned improvements
+
+- [ ] Expand validation against additional real-world Node.js repositories.
+- [ ] Improve diagnostic accuracy for uncommon configurations and command syntax.
+- [ ] Extend support for package managers and project layouts.
+- [ ] Improve report presentation and developer experience.
+- [ ] Investigate additional diagnostic features based on user feedback.
+
+These are future development goals, not promis
+es of functionality already available.
 
 ## Contributing
 
