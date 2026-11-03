@@ -156,7 +156,7 @@ function getWindowsFixSuggestion(command) {
   }
 
   if (/\bchmod\b/i.test(command)) {
-    return 'Check whether this utility is available in the target shell, or replace it with a compatible command.';
+    return 'Windows uses a different permission model. For chmod +x, check whether executable permissions are actually needed. For access permissions, review Windows ACLs and icacls; there is no universal direct replacement.';
   }
   return 'Review this command for Windows shell compatibility and test it before running.';
 }

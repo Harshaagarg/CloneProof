@@ -1693,7 +1693,11 @@ test('provides useful Windows fix suggestions for Unix commands', () => {
     {
   command: 'cat README.md',
   suggestion: 'Get-Content'
-   }
+    },
+    {
+  command: 'chmod +x script.sh',
+  suggestion: 'Windows uses a different permission model'
+    }
   ];
 
   for (const item of cases) {
