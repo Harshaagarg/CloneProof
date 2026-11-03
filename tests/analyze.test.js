@@ -1590,6 +1590,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   command: 'node app.js "C:\\Users\\Harsha\\grep\\project"',
   expected: 'PASS'
 },
+{
+  name: 'detects Unix delete after a quoted Windows folder path',
+  command: 'node app.js "C:\\Projects\\demo" && rm -rf dist',
+  expected: 'WARN'
+},
   ];
 
   for (const item of cases) {
