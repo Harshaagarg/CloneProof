@@ -147,10 +147,13 @@ function getWindowsFixSuggestion(command) {
     return 'Consider PowerShell text processing with ForEach-Object for line processing, or Import-Csv for CSV data.';
   }
 
-  if (/\b(?:chmod|touch|cat)\b/i.test(command)) {
-    return 'Check whether this utility is available in the target shell, or replace it with a compatible command.';
+  if (/\btouch\b/i.test(command)) {
+    return 'To create a file in PowerShell, consider New-Item -ItemType File. Note that touch can also update timestamps, so verify the intended behavior.';
   }
 
+  if (/\b(?:chmod|cat)\b/i.test(command)) {
+    return 'Check whether this utility is available in the target shell, or replace it with a compatible command.';
+  }
   return 'Review this command for Windows shell compatibility and test it before running.';
 }
 function removeQuotedText(command) {

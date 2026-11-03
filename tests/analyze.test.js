@@ -1683,8 +1683,12 @@ test('provides useful Windows fix suggestions for Unix commands', () => {
       suggestion: 'PowerShell string methods'
     },
     {
-      command: 'awk "{print $1}" file.txt',
-      suggestion: 'PowerShell text processing'
+  command: 'awk "{print $1}" file.txt',
+  suggestion: 'PowerShell text processing'
+    },
+    {
+  command: 'touch output.txt',
+  suggestion: 'New-Item -ItemType File'
     }
   ];
 
