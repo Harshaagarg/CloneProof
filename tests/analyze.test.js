@@ -1227,6 +1227,11 @@ test('Windows compatibility benchmark: known command patterns', async (t) => {
   expected: 'WARN'
 },
 {
+  name: 'detects Unix delete after escaped quotes inside sh -c',
+  command: String.raw`sh -c "echo \"hello\" && rm -rf dist"`,
+  expected: 'WARN'
+},
+{
   name: 'detects Unix delete command inside parentheses',
   command: '(rm -rf dist)',
   expected: 'WARN'
