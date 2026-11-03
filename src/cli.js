@@ -11,9 +11,51 @@ const positionalArgs = args.filter((arg) => arg !== '--run-tests');
 const projectPath = positionalArgs[0] ?? './sample-project';
 const reportPath = positionalArgs[1] ?? './cloneproof-report.md';
 
+
 async function main() {
   try {
+    if (args.includes('--help')) {
+      console.log(`
+CloneProof — Windows Project Setup Verifier
+
+Usage:
+  node src/cli.js [project-path] [report-path] [--run-tests]
+  node src/cli.js --help
+
+Arguments:
+  project-path   Folder to analyze (default: ./sample-project)
+  report-path    Markdown report destination (default: ./cloneproof-report.md)
+
+Options:
+  --run-tests    Explicitly execute the project's npm test script
+  --help         Display this help message
+
+By default, CloneProof performs static analysis only.
+No project scripts are executed unless --run-tests is provided.
+`);
+      return;
+    }
+
+    const unknownOption = args.find(
+      (arg) => arg.startsWith('--') &&
+        arg !== '--help' &&
+        arg !== '--run-tests'
+    );
+
+    if (unknownOption) {
+      throw new Error(
+        `Unknown option: ${unknownOption}. Use --help for usage.`
+      );
+    }
+
+
+
     const absoluteProjectPath = path.resolve(projectPath);
+    if (positionalArgs.length > 2) {
+      throw new Error(
+        'Too many arguments. Expected at most a project path and a report path. Use --help for usage.'
+      );
+    }
 
     if (
       !fs.existsSync(absoluteProjectPath) ||

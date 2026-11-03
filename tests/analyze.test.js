@@ -1789,3 +1789,62 @@ scripts: { test: 'node --test' }
 
   fs.rmSync(root, { recursive: true, force: true });
 });
+
+test('CLI --help displays usage without analyzing a project', () => {
+  const cliPath = path.resolve('src/cli.js');
+
+  const result = spawnSync(
+    process.execPath,
+    [cliPath, '--help'],
+    {
+      encoding: 'utf8',
+      timeout: 10000
+    }
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Usage:/i);
+  assert.match(result.stdout, /--run-tests/);
+  assert.doesNotMatch(result.stdout, /CloneProof report for:/);
+});
+
+test('CLI rejects unknown options with a helpful error', () => {
+  const cliPath = path.resolve('src/cli.js');
+
+  const result = spawnSync(
+    process.execPath,
+    [cliPath, '--unknown'],
+    {
+      encoding: 'utf8',
+      timeout: 10000
+    }
+  );
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Unknown option: --unknown/i);
+  assert.match(result.stderr, /--help/);
+  assert.doesNotMatch(result.stderr, /Project path does not exist/);
+});
+
+test('CLI rejects extra positional arguments', () => {
+  const cliPath = path.resolve('src/cli.js');
+
+  const result = spawnSync(
+    process.execPath,
+    [
+      cliPath,
+      './sample-project',
+      './cloneproof-report.md',
+      'extra-argument'
+    ],
+    {
+      encoding: 'utf8',
+      timeout: 10000
+    }
+  );
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Too many arguments/i);
+  assert.match(result.stderr, /--help/);
+  assert.doesNotMatch(result.stdout, /CloneProof report for:/);
+});
