@@ -19,6 +19,9 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
+          
+      - name: Install CloneProof dependencies
+        run: npm ci
 
       - name: Run CloneProof's own tests
         run: npm test
