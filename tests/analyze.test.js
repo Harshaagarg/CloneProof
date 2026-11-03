@@ -1689,7 +1689,11 @@ test('provides useful Windows fix suggestions for Unix commands', () => {
     {
   command: 'touch output.txt',
   suggestion: 'New-Item -ItemType File'
-    }
+    },
+    {
+  command: 'cat README.md',
+  suggestion: 'Get-Content'
+   }
   ];
 
   for (const item of cases) {

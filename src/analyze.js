@@ -151,7 +151,11 @@ function getWindowsFixSuggestion(command) {
     return 'To create a file in PowerShell, consider New-Item -ItemType File. Note that touch can also update timestamps, so verify the intended behavior.';
   }
 
-  if (/\b(?:chmod|cat)\b/i.test(command)) {
+  if (/\bcat\b/i.test(command)) {
+    return 'To display file contents in PowerShell, consider Get-Content. Verify whether the original command uses other cat features.';
+  }
+
+  if (/\bchmod\b/i.test(command)) {
     return 'Check whether this utility is available in the target shell, or replace it with a compatible command.';
   }
   return 'Review this command for Windows shell compatibility and test it before running.';
