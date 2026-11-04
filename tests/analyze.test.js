@@ -849,8 +849,106 @@ test('warns when a declared dependency is missing', () => {
         item.detail?.includes('cloneproof-test-package')
     )
   );
+    fs.rmSync(root, { recursive: true, force: true });
+});
 
-  fs.rmSync(root, { recursive: true, force: true });
+  test('does not fail for npm start inside a generated Express application example', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'express-library',
+      scripts: {
+        test: 'node --test'
+      }
+    },
+    readme: `# Express Library
+
+## Quick Start
+
+Generate a separate application:
+
+\`\`\`bash
+express /tmp/foo && cd /tmp/foo
+\`\`\`
+
+Install dependencies:
+
+\`\`\`bash
+npm install
+\`\`\`
+
+Start the generated application:
+
+\`\`\`bash
+npm start
+\`\`\`
+
+## Development
+
+Run library tests:
+
+\`\`\`bash
+npm test
+\`\`\`
+`
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const documentationCheck = result.checks.find(
+      (item) => item.title === 'README npm commands match package.json'
+    );
+
+    assert.notEqual(
+      documentationCheck?.status,
+      'FAIL',
+      'Commands for a generated application should not fail the library check'
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+test('detects missing repository scripts after a generated app example', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'express-library',
+      scripts: {
+        test: 'node --test'
+      }
+    },
+    readme: `# Express Library
+
+## Quick Start
+
+Generate an application:
+
+\`\`\`bash
+express /tmp/foo && cd /tmp/foo
+npm start
+\`\`\`
+
+## Library Development
+
+Run the library's deployment command:
+
+\`\`\`bash
+npm run deploy
+\`\`\`
+`
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const documentationCheck = result.checks.find(
+      (item) => item.title === 'README npm commands match package.json'
+    );
+
+    assert.equal(documentationCheck?.status, 'FAIL');
+    assert.match(documentationCheck.detail, /deploy/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 test('flags malformed package.json', () => {
   const root = makeProject({

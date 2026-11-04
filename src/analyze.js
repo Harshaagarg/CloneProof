@@ -36,14 +36,43 @@ function findDocumentedNpmScripts(readmeText) {
   const found = new Set();
   const runScriptPattern = /\bnpm\s+run\s+([a-zA-Z0-9:_-]+)/g;
   const directScriptPattern = /\bnpm\s+(test|start|stop|restart)\b/g;
+
+  // A generated Express application has its own package.json.
+  // Commands in that application's setup example do not refer
+  // to the repository currently being analyzed.
+  const lines = readmeText.split(/\r?\n/);
+  let inGeneratedAppExample = false;
+
+  const relevantLines = [];
+
+  for (const line of lines) {
+    // Detect an Express Generator command that creates a separate app.
+    if (/^\s*express\s+\S+.*&&\s*cd\s+\S+/.test(line)) {
+      inGeneratedAppExample = true;
+    }
+
+    // A new section marks the end of this generated-app example.
+    if (/^#{1,6}\s+/.test(line) && inGeneratedAppExample) {
+      inGeneratedAppExample = false;
+    }
+
+    if (!inGeneratedAppExample) {
+      relevantLines.push(line);
+    }
+  }
+
+  const relevantText = relevantLines.join('\n');
+
   let match;
 
-  while ((match = runScriptPattern.exec(readmeText)) !== null) {
+  while ((match = runScriptPattern.exec(relevantText)) !== null) {
     found.add(match[1]);
   }
-  while ((match = directScriptPattern.exec(readmeText)) !== null) {
+
+  while ((match = directScriptPattern.exec(relevantText)) !== null) {
     found.add(match[1]);
   }
+
   return [...found];
 }
 function findMissingNodeScriptFiles(root, scripts = {}) {
