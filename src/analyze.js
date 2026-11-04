@@ -34,9 +34,8 @@ function hasNodeVersionDeclaration(root, pkg) {
 }
 function findDocumentedNpmScripts(readmeText) {
   const found = new Set();
-  const runScriptPattern = /\bnpm\s+run\s+([a-zA-Z0-9:_-]+)/g;
-  const directScriptPattern = /\bnpm\s+(test|start|stop|restart)\b/g;
-
+  const runScriptPattern = /\bnpm(?:\.cmd)?\s+run\s+([a-zA-Z0-9:_-]+)\b/g;
+  const directScriptPattern = /\bnpm(?:\.cmd)?\s+(test|start|stop|restart)\b/g;
   // A generated Express application has its own package.json.
   // Commands in that application's setup example do not refer
   // to the repository currently being analyzed.
@@ -446,7 +445,15 @@ export function analyzeProject(projectPath, currentNodeVersion = process.version
 
   if (readmeText !== null && readmeText.trim().length > 0) {
     const documentedScripts = findDocumentedNpmScripts(readmeText);
-    const missingScripts = documentedScripts.filter((name) => typeof scripts[name] !== 'string');
+    const missingScripts = documentedScripts.filter((name) => {
+  if (typeof scripts[name] === 'string') return false;
+
+  if (name === 'start' && fs.existsSync(path.join(root, 'server.js'))) {
+    return false;
+  }
+
+  return true;
+});
     if (missingScripts.length > 0) {
       checks.push(check('FAIL', 'README npm commands match package.json', `README.md mentions script(s) not defined in package.json: ${missingScripts.join(', ')}. Update the instructions or add the missing script(s).`));
     } else if (documentedScripts.length > 0) {

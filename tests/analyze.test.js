@@ -1947,3 +1947,96 @@ test('CLI rejects extra positional arguments', () => {
   assert.match(result.stderr, /--help/);
   assert.doesNotMatch(result.stdout, /CloneProof report for:/);
 });
+test('detects missing scripts documented with npm.cmd', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'windows-npm-demo',
+      scripts: {
+        test: 'node --test'
+      }
+    },
+    readme: '# Windows Setup\n\nRun `npm.cmd run launch`.'
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const documentationCheck = result.checks.find(
+      (item) => item.title === 'README npm commands match package.json'
+    );
+
+    assert.ok(
+      documentationCheck,
+      'Expected README script verification to run'
+    );
+
+    assert.equal(documentationCheck.status, 'FAIL');
+    assert.match(documentationCheck.detail, /launch/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('allows npm start when root server.js provides the default start', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'default-start-demo',
+      scripts: {
+        test: 'node --test'
+      }
+    },
+    readme: '# Demo\n\nStart with `npm start`.',
+    extraFiles: {
+      'server.js': 'console.log("server started");'
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const documentationCheck = result.checks.find(
+      (item) => item.title === 'README npm commands match package.json'
+    );
+
+    assert.ok(documentationCheck);
+
+    assert.notEqual(
+      documentationCheck.status,
+      'FAIL',
+      'npm start should recognize the default root server.js behavior'
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+test('allows npm run start with a root server.js', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'default-run-start-demo',
+      scripts: {
+        test: 'node --test'
+      }
+    },
+    readme: '# Demo\n\nRun `npm run start`.',
+    extraFiles: {
+      'server.js': 'console.log("server started");'
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const documentationCheck = result.checks.find(
+      (item) => item.title === 'README npm commands match package.json'
+    );
+
+    assert.ok(documentationCheck);
+    assert.notEqual(
+      documentationCheck.status,
+      'FAIL',
+      'npm run start should recognize the default server.js behavior'
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
