@@ -2087,3 +2087,133 @@ test('explains npm shell context for Unix-style cleanup scripts', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('reports a project-level PowerShell npm script-shell setting', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'configured-shell-demo',
+      scripts: {
+        clean: 'rm -rf dist'
+      }
+    },
+    readme: '# Configured Shell Demo',
+    extraFiles: {
+      '.npmrc': 'script-shell=powershell.exe\n'
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const shellCheck = result.checks.find(
+      (item) =>
+        item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(shellCheck);
+    assert.equal(shellCheck.status, 'WARN');
+
+    // The project requests PowerShell as its npm script shell.
+    assert.match(
+      shellCheck.detail,
+      /project.*script-shell.*powershell\.exe/i
+    );
+
+    // A project-level setting does not prove the effective shell.
+    assert.match(
+      shellCheck.detail,
+      /effective shell.*not verified/i
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+test('uses the last active project npm script-shell setting', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'npmrc-duplicate-demo',
+      scripts: {
+        clean: 'rm -rf dist'
+      }
+    },
+    readme: '# npmrc Duplicate Demo',
+    extraFiles: {
+      '.npmrc': [
+        '# script-shell=cmd.exe',
+        'script-shell=cmd.exe',
+        '; script-shell=sh',
+        'script-shell=powershell.exe'
+      ].join('\n')
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const shellCheck = result.checks.find(
+      (item) =>
+        item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(shellCheck);
+    assert.equal(shellCheck.status, 'WARN');
+
+    assert.match(
+      shellCheck.detail,
+      /project.*script-shell.*powershell\.exe/i
+    );
+
+    assert.doesNotMatch(
+      shellCheck.detail,
+      /requests cmd\.exe/i
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+test('does not treat an unresolved npm script-shell variable as a verified shell', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'npmrc-unresolved-shell-demo',
+      scripts: {
+        clean: 'rm -rf dist'
+      }
+    },
+    readme: '# Unresolved Shell Demo',
+    extraFiles: {
+      '.npmrc': 'script-shell=${CUSTOM_SHELL}\n'
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const shellCheck = result.checks.find(
+      (item) =>
+        item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(shellCheck);
+    assert.equal(shellCheck.status, 'WARN');
+
+    assert.match(
+      shellCheck.detail,
+      /script-shell/i
+    );
+
+    assert.match(
+      shellCheck.detail,
+      /unresolved|unknown|cannot determine/i
+    );
+
+    assert.doesNotMatch(
+      shellCheck.detail,
+      /verified shell.*CUSTOM_SHELL/i
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

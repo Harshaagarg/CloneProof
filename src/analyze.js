@@ -208,7 +208,33 @@ function removeAllQuotedText(command) {
     ''
   );
 }
-function findPotentialWindowsScriptIssues(scripts = {}) {
+function getProjectNpmScriptShell(root) {
+  const npmrcText = readText(path.join(root, '.npmrc'));
+
+  if (npmrcText === null) {
+    return null;
+  }
+
+  let configuredShell = null;
+
+  for (const line of npmrcText.split(/\r?\n/)) {
+    const trimmed = line.trim();
+
+    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith(';')) {
+      continue;
+    }
+
+    const match = trimmed.match(/^script-shell\s*=\s*(.*)$/i);
+
+    if (match) {
+      configuredShell = match[1].trim().replace(/^["']|["']$/g, '');
+    }
+  }
+
+  return configuredShell || null;
+}
+
+function findPotentialWindowsScriptIssues(scripts = {}, projectShell = null) {
 const issues = [];
 
 
@@ -261,13 +287,21 @@ while (true) {
           : removeAllQuotedText(shellWrappedCommand);
 
       if (regex.test(commandToCheck)) {
-        const suggestion = getWindowsFixSuggestion(removeQuotedText(command));
+const suggestion = getWindowsFixSuggestion(removeQuotedText(command));
+const hasUnresolvedShellVariable =
+  typeof projectShell === 'string' &&
+  /\$\{[^}]+\}/.test(projectShell);
 
+const shellContext = hasUnresolvedShellVariable
+  ? `Project .npmrc script-shell contains an unresolved variable reference (${projectShell}); effective shell is unknown. `
+  : projectShell
+    ? `Project .npmrc script-shell requests ${projectShell}; effective shell is not verified. `
+    : '';
         issues.push(
           `Script "${name}": ${why} ` +
           `Command: ${command} ` +
           `Suggested fix: ${suggestion} ` +
-          `Shell context: On Windows, npm scripts normally run through cmd.exe, ` +
+          `Shell context: ${shellContext}On Windows, npm scripts normally run through cmd.exe, ` +
           `unless the npm script-shell configuration overrides this default. ` +
           `Launching npm from PowerShell does not automatically make npm scripts run in PowerShell. ` +
           `PowerShell commands should not be pasted directly into an npm script; ` +
@@ -729,8 +763,9 @@ checks.push(
   }
 
 
-  const windowsIssues = findPotentialWindowsScriptIssues(scripts);
-  checks.push(windowsIssues.length > 0
+const projectShell = getProjectNpmScriptShell(root);
+const windowsIssues = findPotentialWindowsScriptIssues(scripts, projectShell);
+checks.push(windowsIssues.length > 0
     ? check('WARN', 'Scripts reviewed for common Windows shell issues', `${windowsIssues.join(' ')} These are heuristics; review the command before changing it.`)
     : check('PASS', 'Scripts reviewed for common Windows shell issues', 'No common Unix-only command patterns were detected. This does not prove every script will work on Windows.'));
 
