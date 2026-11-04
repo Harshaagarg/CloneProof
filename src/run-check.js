@@ -125,6 +125,7 @@ export function runNpmScript(projectPath, scriptName = 'test', timeoutMs = 15000
       resolve({
         success: false,
         message: `The script timed out after ${timeoutMs} ms.`,
+        explanation: explainFailure(stdout, stderr, `The script timed out after ${timeoutMs} ms.`),
         stdout,
         stderr
       });

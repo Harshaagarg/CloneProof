@@ -1250,6 +1250,7 @@ test('reports when a test script exceeds its timeout', async () => {
   const result = await runNpmScript(projectPath, 'test', 500);
   assert.equal(result.success, false);
   assert.match(result.message, /timed out/i);
+  assert.match(result.explanation, /exceeded its time limit/i);
 });
 
 test('Windows compatibility benchmark: known command patterns', async (t) => {
