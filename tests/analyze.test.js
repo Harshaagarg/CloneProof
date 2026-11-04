@@ -2040,3 +2040,50 @@ test('allows npm run start with a root server.js', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('explains npm shell context for Unix-style cleanup scripts', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'shell-context-demo',
+      scripts: {
+        clean: 'rm -rf dist'
+      }
+    },
+    readme: '# Shell Context Demo'
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const shellCheck = result.checks.find(
+      (item) =>
+        item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(shellCheck);
+    assert.equal(shellCheck.status, 'WARN');
+
+    // Explain the usual Windows npm execution context.
+    assert.match(shellCheck.detail, /cmd\.exe/i);
+
+    // Distinguish PowerShell advice from npm script replacements.
+    assert.match(
+      shellCheck.detail,
+      /PowerShell/i
+    );
+
+    assert.match(
+      shellCheck.detail,
+      /not.*directly.*npm script/i
+    );
+
+    // Explain how to verify a potential correction.
+    assert.match(
+      shellCheck.detail,
+      /rerun.*CloneProof/i
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

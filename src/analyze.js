@@ -264,7 +264,18 @@ while (true) {
         const suggestion = getWindowsFixSuggestion(removeQuotedText(command));
 
         issues.push(
-          `Script "${name}": ${why} Command: ${command} Suggested fix: ${suggestion}`
+          `Script "${name}": ${why} ` +
+          `Command: ${command} ` +
+          `Suggested fix: ${suggestion} ` +
+          `Shell context: On Windows, npm scripts normally run through cmd.exe, ` +
+          `unless the npm script-shell configuration overrides this default. ` +
+          `Launching npm from PowerShell does not automatically make npm scripts run in PowerShell. ` +
+          `PowerShell commands should not be pasted directly into an npm script; ` +
+          `use an explicit PowerShell invocation or an appropriate portable alternative. ` +
+          `The actual configured shell has not been verified. ` +
+          `Verification: After reviewing and applying a suitable correction, rerun CloneProof ` +
+          `to check whether this specific warning is still detected. ` +
+          `Removing the warning does not guarantee successful script execution.`
         );
 
         break;
@@ -290,11 +301,9 @@ export function analyzeProject(projectPath, currentNodeVersion = process.version
       summary: { pass: 0, warn: 0, fail: 1 }
     };
   }
-
   const packagePath = path.join(root, 'package.json');
   const packageText = readText(packagePath);
   let pkg = null;
-
   if (packageText === null) {
     checks.push(check('FAIL', 'package.json exists', 'No package.json was found. This starter currently checks JavaScript/Node.js projects.'));
   } else {
