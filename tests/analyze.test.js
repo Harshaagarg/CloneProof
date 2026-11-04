@@ -2418,3 +2418,245 @@ test('avoids PowerShell-specific copy advice for a custom shell', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+test('accepts a valid npm lockfile JSON object', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'valid-lockfile-demo',
+      version: '1.0.0'
+    },
+    readme: '# Valid Lockfile Demo',
+    extraFiles: {
+      'package-lock.json': JSON.stringify({
+        name: 'valid-lockfile-demo',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        requires: true,
+        packages: {
+          '': {
+            name: 'valid-lockfile-demo',
+            version: '1.0.0'
+          }
+        }
+      })
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const lockCheck = result.checks.find(
+      (item) => item.title === 'npm lockfile JSON validity'
+    );
+
+    assert.ok(lockCheck);
+    assert.equal(lockCheck.status, 'PASS');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('detects malformed npm lockfile JSON', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'invalid-lockfile-demo',
+      version: '1.0.0'
+    },
+    readme: '# Invalid Lockfile Demo',
+    extraFiles: {
+      'package-lock.json': '{invalid json'
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const lockCheck = result.checks.find(
+      (item) => item.title === 'npm lockfile integrity'
+    );
+
+    assert.ok(lockCheck);
+    assert.equal(lockCheck.status, 'FAIL');
+    assert.match(lockCheck.detail, /invalid JSON/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('rejects npm lockfiles containing a JSON array', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'array-lockfile-demo',
+      version: '1.0.0'
+    },
+    readme: '# Array Lockfile Demo',
+    extraFiles: {
+      'package-lock.json': '[]'
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const lockCheck = result.checks.find(
+      (item) => item.title === 'npm lockfile integrity'
+    );
+
+    assert.ok(lockCheck);
+    assert.equal(lockCheck.status, 'FAIL');
+    assert.match(lockCheck.detail, /JSON object/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+test('accepts matching npm lockfile dependency declarations', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'matching-dependencies-demo',
+      version: '1.0.0',
+      dependencies: { express: '^5.0.0' }
+    },
+    readme: '# Matching Dependencies',
+    extraFiles: {
+      'package-lock.json': JSON.stringify({
+        name: 'matching-dependencies-demo',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'matching-dependencies-demo',
+            version: '1.0.0',
+            dependencies: { express: '^5.0.0' }
+          }
+        }
+      })
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const lockCheck = result.checks.find(
+      item => item.title === 'npm lockfile dependency synchronization'
+    );
+
+    assert.ok(lockCheck);
+    assert.equal(lockCheck.status, 'PASS');
+    assert.match(lockCheck.detail, /Direct dependency declarations match/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('detects conflicting npm dependency declarations', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'conflicting-dependencies-demo',
+      version: '1.0.0',
+      dependencies: { express: '^5.0.0' }
+    },
+    readme: '# Conflicting Dependencies',
+    extraFiles: {
+      'package-lock.json': JSON.stringify({
+        name: 'conflicting-dependencies-demo',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'conflicting-dependencies-demo',
+            version: '1.0.0',
+            dependencies: { express: '^4.0.0' }
+          }
+        }
+      })
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const lockCheck = result.checks.find(
+      item => item.title === 'npm lockfile dependency synchronization'
+    );
+
+    assert.ok(lockCheck);
+    assert.equal(lockCheck.status, 'FAIL');
+    assert.match(lockCheck.detail, /express/i);
+    assert.match(lockCheck.detail, /\^5\.0\.0/);
+    assert.match(lockCheck.detail, /\^4\.0\.0/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('detects a dependency missing from the npm lockfile root', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'missing-locked-dependency-demo',
+      version: '1.0.0',
+      dependencies: { express: '^5.0.0' }
+    },
+    readme: '# Missing Locked Dependency',
+    extraFiles: {
+      'package-lock.json': JSON.stringify({
+        name: 'missing-locked-dependency-demo',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'missing-locked-dependency-demo',
+            version: '1.0.0'
+          }
+        }
+      })
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const lockCheck = result.checks.find(
+      item => item.title === 'npm lockfile dependency synchronization'
+    );
+
+    assert.ok(lockCheck);
+    assert.equal(lockCheck.status, 'FAIL');
+    assert.match(lockCheck.detail, /express/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('warns when npm lockfile root declarations cannot be compared', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'unsupported-lockfile-demo',
+      version: '1.0.0',
+      dependencies: { express: '^5.0.0' }
+    },
+    readme: '# Unsupported Lockfile',
+    extraFiles: {
+      'package-lock.json': JSON.stringify({
+        name: 'unsupported-lockfile-demo',
+        version: '1.0.0',
+        lockfileVersion: 1,
+        dependencies: {
+          express: { version: '5.0.0' }
+        }
+      })
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const lockCheck = result.checks.find(
+      item => item.title === 'npm lockfile dependency synchronization'
+    );
+
+    assert.ok(lockCheck);
+    assert.equal(lockCheck.status, 'WARN');
+    assert.match(lockCheck.detail, /could not compare/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

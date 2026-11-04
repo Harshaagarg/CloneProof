@@ -820,7 +820,137 @@ checks.push(
   } else {
     checks.push(check('PASS', 'Dependency lockfile check', 'No dependencies are declared and no lockfile is required for this simple project.'));
   }
+    // M2: Validate npm lockfile JSON without executing project code.
+  const npmLockfilePath = path.join(root, 'package-lock.json');
 
+  if (fs.existsSync(npmLockfilePath)) {
+    const npmLockfileText = readText(npmLockfilePath);
+
+    if (npmLockfileText === null) {
+      checks.push(
+        check(
+          'WARN',
+          'npm lockfile integrity',
+          'Could not read package-lock.json. Verify its permissions and accessibility.'
+        )
+      );
+    } else {
+      try {
+        const npmLockfile = JSON.parse(npmLockfileText);
+
+        if (
+          npmLockfile === null ||
+          typeof npmLockfile !== 'object' ||
+          Array.isArray(npmLockfile)
+        ) {
+          checks.push(
+            check(
+              'FAIL',
+              'npm lockfile integrity',
+              'package-lock.json must contain a JSON object.'
+            )
+          );
+        } else {
+          checks.push(
+            check(
+              'PASS',
+              'npm lockfile JSON validity',
+              'package-lock.json contains valid JSON. Dependency synchronization has not yet been verified.'
+            )
+          );
+                    // M2: Compare direct dependency declarations in modern npm lockfiles.
+          const lockfileRoot = npmLockfile.packages?.[''];
+
+          if (
+            (npmLockfile.lockfileVersion === 2 ||
+              npmLockfile.lockfileVersion === 3) &&
+            lockfileRoot &&
+            typeof lockfileRoot === 'object' &&
+            !Array.isArray(lockfileRoot)
+          ) {
+            const dependencyFields = [
+              'dependencies',
+              'devDependencies',
+              'optionalDependencies'
+            ];
+
+            const mismatches = [];
+
+            for (const field of dependencyFields) {
+              const packageDependencies =
+                pkg[field] &&
+                typeof pkg[field] === 'object' &&
+                !Array.isArray(pkg[field])
+                  ? pkg[field]
+                  : {};
+
+              const lockedDependencies =
+                lockfileRoot[field] &&
+                typeof lockfileRoot[field] === 'object' &&
+                !Array.isArray(lockfileRoot[field])
+                  ? lockfileRoot[field]
+                  : {};
+
+              const dependencyNames = new Set([
+                ...Object.keys(packageDependencies),
+                ...Object.keys(lockedDependencies)
+              ]);
+
+              for (const name of dependencyNames) {
+                const declaredVersion = packageDependencies[name];
+                const lockedVersion = lockedDependencies[name];
+
+                if (declaredVersion !== lockedVersion) {
+                  mismatches.push(
+                    `${field}.${name}: package.json=${JSON.stringify(declaredVersion ?? null)}, ` +
+                    `package-lock.json=${JSON.stringify(lockedVersion ?? null)}`
+                  );
+                }
+              }
+            }
+
+            if (mismatches.length > 0) {
+              checks.push(
+                check(
+                  'FAIL',
+                  'npm lockfile dependency synchronization',
+                  `Found ${mismatches.length} direct dependency declaration mismatch(es): ` +
+                  mismatches.join('; ') +
+                  '. Review the changes and update the lockfile using the appropriate npm workflow.'
+                )
+              );
+            } else {
+              checks.push(
+                check(
+                  'PASS',
+                  'npm lockfile dependency synchronization',
+                  'Direct dependency declarations match between package.json and package-lock.json. ' +
+                  'Resolved dependency integrity and npm ci success have not been verified.'
+                )
+              );
+            }
+          } else {
+            checks.push(
+              check(
+                'WARN',
+                'npm lockfile dependency synchronization',
+                'Could not compare root dependency declarations using the supported npm lockfile v2/v3 format. ' +
+                'Review the lockfile format and verify compatibility separately.'
+              )
+            );
+          }
+        }
+      } catch (error) {
+        checks.push(
+          check(
+            'FAIL',
+            'npm lockfile integrity',
+            'package-lock.json contains invalid JSON. Regenerate or repair the lockfile using the appropriate npm workflow.'
+          )
+        );
+      }
+    }
+  }
 
   // Check whether declared dependencies are installed.
   const declaredDependencies = {
