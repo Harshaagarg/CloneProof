@@ -2217,3 +2217,119 @@ test('does not treat an unresolved npm script-shell variable as a verified shell
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+test('recommends an npm-script-compatible fix for default Windows shell', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'cmd-shell-fix-demo',
+      scripts: {
+        clean: 'rm -rf dist'
+      }
+    },
+    readme: '# CMD Shell Fix Demo'
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const shellCheck = result.checks.find(
+      (item) =>
+        item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(shellCheck);
+    assert.equal(shellCheck.status, 'WARN');
+
+    // The recommendation should acknowledge npm's default Windows shell.
+    assert.match(shellCheck.detail, /cmd\.exe/i);
+
+    // Suggest a portable alternative rather than only a PowerShell command.
+    assert.match(
+      shellCheck.detail,
+      /portable.*Node\.js|Node\.js.*portable/i
+    );
+
+    // Warn users to verify a destructive operation's target.
+    assert.match(shellCheck.detail, /verify.*target path/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+test('provides PowerShell-aware cleanup guidance when requested', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'powershell-fix-demo',
+      scripts: {
+        clean: 'rm -rf dist'
+      }
+    },
+    readme: '# PowerShell Fix Demo',
+    extraFiles: {
+      '.npmrc': 'script-shell=powershell.exe\n'
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const shellCheck = result.checks.find(
+      (item) =>
+        item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(shellCheck);
+    assert.equal(shellCheck.status, 'WARN');
+
+    assert.match(
+      shellCheck.detail,
+      /PowerShell Remove-Item -Recurse -Force/i
+    );
+
+    assert.match(
+      shellCheck.detail,
+      /effective npm shell has not been verified/i
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+test('avoids assuming a shell when npm configuration is unresolved', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'unknown-shell-fix-demo',
+      scripts: {
+        clean: 'rm -rf dist'
+      }
+    },
+    readme: '# Unknown Shell Fix Demo',
+    extraFiles: {
+      '.npmrc': 'script-shell=${CUSTOM_SHELL}\n'
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const shellCheck = result.checks.find(
+      (item) =>
+        item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(shellCheck);
+    assert.equal(shellCheck.status, 'WARN');
+
+    assert.match(
+      shellCheck.detail,
+      /effective shell is unknown/i
+    );
+
+    assert.match(
+      shellCheck.detail,
+      /portable Node\.js/i
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

@@ -142,9 +142,43 @@ function findMissingNodeScriptFiles(root, scripts = {}) {
   return missing;
 }
 
-function getWindowsFixSuggestion(command) {
-  if (/\brm\s+-(?:rf|fr|r|R)\b/i.test(command)) {
-    return 'Review replacing this with PowerShell Remove-Item -Recurse -Force, after verifying the target path.';
+function getWindowsFixSuggestion(command, projectShell = null) {
+    if (/\brm\s+-(?:rf|fr|r|R)\b/i.test(command)) {
+    const portableFix =
+      'For a portable Node.js approach, consider fs.rmSync() ' +
+      'with recursive and force options in a reviewed cleanup script. ' +
+      'Verify the target path before deleting anything. ';
+
+    const unresolvedShell =
+      typeof projectShell === 'string' &&
+      /\$\{[^}]+\}/.test(projectShell);
+
+    if (unresolvedShell) {
+      return portableFix +
+        'The project script-shell setting contains an unresolved variable. ' +
+        'The effective shell is unknown, so do not assume that PowerShell ' +
+        'or cmd.exe commands will work.';
+    }
+
+    if (typeof projectShell === 'string' &&
+        /(?:^|[\\/])(?:powershell|pwsh)(?:\.exe)?$/i.test(projectShell)) {
+      return portableFix +
+        'The project .npmrc requests PowerShell. ' +
+        'PowerShell Remove-Item -Recurse -Force may be suitable, ' +
+        'but the effective npm shell has not been verified.';
+    }
+
+    if (projectShell) {
+      return portableFix +
+        'The project requests a custom npm script shell. ' +
+        'Verify its syntax and effective configuration before ' +
+        'applying a shell-specific replacement.';
+    }
+
+    return portableFix +
+      'Windows npm scripts normally use cmd.exe. ' +
+      'PowerShell Remove-Item -Recurse -Force is an alternative ' +
+      'only when PowerShell is explicitly invoked or configured.';
   }
 
   if (/\bcp\s+/i.test(command)) {
@@ -287,7 +321,10 @@ while (true) {
           : removeAllQuotedText(shellWrappedCommand);
 
       if (regex.test(commandToCheck)) {
-const suggestion = getWindowsFixSuggestion(removeQuotedText(command));
+const suggestion = getWindowsFixSuggestion(
+  removeQuotedText(command),
+  projectShell
+);
 const hasUnresolvedShellVariable =
   typeof projectShell === 'string' &&
   /\$\{[^}]+\}/.test(projectShell);
