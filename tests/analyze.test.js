@@ -2333,3 +2333,88 @@ test('avoids assuming a shell when npm configuration is unresolved', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+test('qualifies copy advice for the default Windows npm shell', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'default-shell-copy-demo',
+      scripts: { build: 'cp source.txt destination.txt' }
+    },
+    readme: '# Default Shell Copy Demo'
+  });
+
+  try {
+    const result = analyzeProject(root);
+    const check = result.checks.find(
+      (item) => item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(check);
+    assert.equal(check.status, 'WARN');
+    assert.match(check.detail, /portable alternative/i);
+    assert.match(check.detail, /cmd\.exe/i);
+    assert.match(check.detail, /not a direct cmd\.exe replacement/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('qualifies copy advice when PowerShell is requested', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'powershell-copy-demo',
+      scripts: { build: 'cp source.txt destination.txt' }
+    },
+    readme: '# PowerShell Copy Demo',
+    extraFiles: {
+      '.npmrc': 'script-shell=powershell.exe\n'
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+    const check = result.checks.find(
+      (item) => item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(check);
+    assert.equal(check.status, 'WARN');
+    assert.match(check.detail, /Copy-Item/i);
+    assert.match(
+      check.detail,
+      /effective npm script shell has not been verified/i
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('avoids PowerShell-specific copy advice for a custom shell', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'custom-shell-copy-demo',
+      scripts: { build: 'cp source.txt destination.txt' }
+    },
+    readme: '# Custom Shell Copy Demo',
+    extraFiles: {
+      '.npmrc': 'script-shell=/bin/sh\n'
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+    const check = result.checks.find(
+      (item) => item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(check);
+    assert.equal(check.status, 'WARN');
+    assert.match(check.detail, /custom npm script shell/i);
+    assert.match(check.detail, /portable alternative/i);
+    assert.doesNotMatch(check.detail, /PowerShell Copy-Item/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

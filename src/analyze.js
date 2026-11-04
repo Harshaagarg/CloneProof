@@ -142,7 +142,7 @@ function findMissingNodeScriptFiles(root, scripts = {}) {
   return missing;
 }
 
-function getWindowsFixSuggestion(command, projectShell = null) {
+function getBaseWindowsFixSuggestion(command, projectShell = null) {
     if (/\brm\s+-(?:rf|fr|r|R)\b/i.test(command)) {
     const portableFix =
       'For a portable Node.js approach, consider fs.rmSync() ' +
@@ -222,6 +222,66 @@ function getWindowsFixSuggestion(command, projectShell = null) {
   }
   return 'Review this command for Windows shell compatibility and test it before running.';
 }
+
+// ✅ PASTE THE NEW FUNCTION BELOW THIS LINE
+
+function getWindowsFixSuggestion(command, projectShell = null) {
+  const originalAdvice = getBaseWindowsFixSuggestion(
+    command,
+    projectShell
+  );
+
+  // Cleanup commands already have dedicated shell-aware guidance.
+  if (/\brm\s+-(?:rf|fr|r|R)\b/i.test(command)) {
+    return originalAdvice;
+  }
+
+  const portableAdvice =
+    'Portable alternative: consider implementing the operation ' +
+    'in a reviewed Node.js script using appropriate built-in APIs. ' +
+    'Check that the replacement preserves the original behavior. ';
+
+  const unresolvedShell =
+    typeof projectShell === 'string' &&
+    /\$\{[^}]+\}/.test(projectShell);
+
+  if (unresolvedShell) {
+    return portableAdvice +
+      'The project script-shell setting contains an unresolved variable. ' +
+      'The effective shell is unknown. Do not assume PowerShell or ' +
+      'cmd.exe commands are compatible. Verify the configuration first.';
+  }
+
+  const requestsPowerShell =
+    typeof projectShell === 'string' &&
+    /(?:^|[\\/])(?:powershell|pwsh)(?:\.exe)?$/i.test(
+      projectShell
+    );
+
+  if (requestsPowerShell) {
+    return originalAdvice + ' ' +
+      'This recommendation assumes PowerShell syntax. ' +
+      'The project .npmrc requests PowerShell, but the effective ' +
+      'npm script shell has not been verified.';
+  }
+
+  if (projectShell) {
+    return portableAdvice +
+      'The project requests a custom npm script shell. ' +
+      'Verify its actual configuration and command syntax before ' +
+      'choosing a shell-specific replacement.';
+  }
+
+  return portableAdvice +
+    'Windows npm scripts normally use cmd.exe. ' +
+    'The following is a PowerShell-specific alternative, not a ' +
+    'direct cmd.exe replacement: ' +
+    originalAdvice;
+}
+
+
+// ✅ YOUR EXISTING FUNCTION STAYS BELOW
+
 function removeQuotedText(command) {
   return command.replace(
     /(["'])(?:\\.|(?!\1)[^\\])*\1/g,
