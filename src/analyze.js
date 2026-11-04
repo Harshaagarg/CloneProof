@@ -929,6 +929,59 @@ checks.push(
                 )
               );
             }
+                        // M2: Check direct registry dependency package entries.
+            const missingPackageEntries = [];
+
+            for (const field of dependencyFields) {
+              const declared =
+                pkg[field] &&
+                typeof pkg[field] === 'object' &&
+                !Array.isArray(pkg[field])
+                  ? pkg[field]
+                  : {};
+
+              for (const [name, spec] of Object.entries(declared)) {
+                // Only check ordinary registry semver specifications.
+                // Other forms need separate handling.
+                if (
+                  typeof spec !== 'string' ||
+                  !semver.validRange(spec)
+                ) {
+                  continue;
+                }
+
+                const expectedPath = `node_modules/${name}`;
+
+                if (
+                  !npmLockfile.packages ||
+                  !Object.hasOwn(npmLockfile.packages, expectedPath)
+                ) {
+                  missingPackageEntries.push(expectedPath);
+                }
+              }
+            }
+
+            if (missingPackageEntries.length > 0) {
+              checks.push(
+                check(
+                  'WARN',
+                  'npm lockfile package entries',
+                  `Missing expected lockfile package entries: ` +
+                  missingPackageEntries.join(', ') +
+                  '. Review the lockfile before relying on npm ci. ' +
+                  'This check does not validate the complete dependency tree.'
+                )
+              );
+            } else {
+              checks.push(
+                check(
+                  'PASS',
+                  'npm lockfile package entries',
+                  'No expected direct registry dependency package entries are missing. ' +
+                  'Resolved versions, integrity hashes, and npm ci success have not been verified.'
+                )
+              );
+            }
           } else {
             checks.push(
               check(

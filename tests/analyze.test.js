@@ -2660,3 +2660,94 @@ test('warns when npm lockfile root declarations cannot be compared', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+test('warns when a direct registry dependency lacks a lockfile package entry', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'missing-package-entry-demo',
+      version: '1.0.0',
+      dependencies: {
+        express: '^5.0.0'
+      }
+    },
+    readme: '# Missing Package Entry Demo',
+    extraFiles: {
+      'package-lock.json': JSON.stringify({
+        name: 'missing-package-entry-demo',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'missing-package-entry-demo',
+            version: '1.0.0',
+            dependencies: {
+              express: '^5.0.0'
+            }
+          }
+        }
+      })
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const entryCheck = result.checks.find(
+      item => item.title === 'npm lockfile package entries'
+    );
+
+    assert.ok(entryCheck);
+    assert.equal(entryCheck.status, 'WARN');
+    assert.match(entryCheck.detail, /node_modules\/express/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('passes when a direct registry dependency has a lockfile package entry', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'present-package-entry-demo',
+      version: '1.0.0',
+      dependencies: {
+        express: '^5.0.0'
+      }
+    },
+    readme: '# Present Package Entry Demo',
+    extraFiles: {
+      'package-lock.json': JSON.stringify({
+        name: 'present-package-entry-demo',
+        version: '1.0.0',
+        lockfileVersion: 3,
+        packages: {
+          '': {
+            name: 'present-package-entry-demo',
+            version: '1.0.0',
+            dependencies: {
+              express: '^5.0.0'
+            }
+          },
+          'node_modules/express': {
+            version: '5.0.0'
+          }
+        }
+      })
+    }
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const entryCheck = result.checks.find(
+      item => item.title === 'npm lockfile package entries'
+    );
+
+    assert.ok(entryCheck);
+    assert.equal(entryCheck.status, 'PASS');
+    assert.match(
+      entryCheck.detail,
+      /No expected direct registry dependency package entries are missing/i
+    );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
