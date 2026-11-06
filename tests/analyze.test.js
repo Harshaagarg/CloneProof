@@ -2892,3 +2892,61 @@ test('preserves finding metadata in JSON without breaking Markdown', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+test('ignores hypothetical README npm commands', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'hypothetical-readme-demo',
+      version: '1.0.0',
+      scripts: {
+        test: 'node --test'
+      }
+    },
+    readme:
+      '# Hypothetical README Demo\n\n' +
+      'Run `npm test` to check the project.\n\n' +
+      'For example, if the README documents `npm run dev` ' +
+      'and package.json defines a dev script, CloneProof can compare them.'
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const finding = result.checks.find(
+      item => item.title === 'README npm commands match package.json'
+    );
+
+    assert.ok(finding);
+    assert.equal(finding.status, 'PASS');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('still detects a missing npm script in real README instructions', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'actual-readme-command-demo',
+      version: '1.0.0',
+      scripts: {
+        test: 'node --test'
+      }
+    },
+    readme:
+      '# Actual README Command Demo\n\n' +
+      'To start development, run `npm run dev`.'
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const finding = result.checks.find(
+      item => item.title === 'README npm commands match package.json'
+    );
+
+    assert.ok(finding);
+    assert.equal(finding.status, 'FAIL');
+    assert.match(finding.detail, /dev/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

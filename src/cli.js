@@ -9,65 +9,94 @@ import {
 import { runNpmScript } from './run-check.js';
 
 const args = process.argv.slice(2);
-const runTests = args.includes('--run-tests');
 
-const positionalArgs = [];
-let reportFormat = 'markdown';
+function parseArguments(args) {
+  const positionalArgs = [];
+  let reportFormat = 'markdown';
+  let runTests = false;
 
-for (let i = 0; i < args.length; i++) {
-  const arg = args[i];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
 
-  if (arg === '--run-tests' || arg === '--help') {
-    continue;
-  }
+    if (arg === '--help') {
+      continue;
+    }
 
-  if (arg === '--format') {
-    const value = args[++i];
+    if (arg === '--run-tests') {
+      runTests = true;
+      continue;
+    }
 
-    if (!['markdown', 'json'].includes(value)) {
+    if (arg === '--format') {
+      const value = args[++i];
+
+      if (!['markdown', 'json'].includes(value)) {
+        throw new Error(
+          'Invalid format. Use --format markdown or --format json.'
+        );
+      }
+
+      reportFormat = value;
+      continue;
+    }
+
+    if (arg.startsWith('--')) {
       throw new Error(
-        'Invalid format. Use --format markdown or --format json.'
+        `Unknown option: ${arg}. Use --help for usage.`
       );
     }
 
-    reportFormat = value;
-    continue;
+    positionalArgs.push(arg);
   }
 
-  if (arg.startsWith('--')) {
+  if (positionalArgs.length > 2) {
     throw new Error(
-      `Unknown option: ${arg}. Use --help for usage.`
+      'Too many arguments. Expected at most a project path and a report path. Use --help for usage.'
     );
   }
 
-  positionalArgs.push(arg);
+  return {
+    runTests,
+    reportFormat,
+    projectPath: positionalArgs[0] ?? './sample-project',
+    reportPath:
+      positionalArgs[1] ??
+      (reportFormat === 'json'
+        ? './cloneproof-report.json'
+        : './cloneproof-report.md')
+  };
 }
-
-const projectPath = positionalArgs[0] ?? './sample-project';
-
-const defaultReportPath =
-  reportFormat === 'json'
-    ? './cloneproof-report.json'
-    : './cloneproof-report.md';
-
-const reportPath = positionalArgs[1] ?? defaultReportPath;
 
 
 async function main() {
   try {
+    const {
+      runTests,
+      reportFormat,
+      projectPath,
+      reportPath
+    } = args.includes('--help')
+      ? {
+          runTests: false,
+          reportFormat: 'markdown',
+          projectPath: './sample-project',
+          reportPath: './cloneproof-report.md'
+        }
+      : parseArguments(args);
     if (args.includes('--help')) {
       console.log(`
 CloneProof — Windows Project Setup Verifier
 
 Usage:
-  node src/cli.js [project-path] [report-path] [--run-tests]
+  node src/cli.js [project-path] [report-path] [--format markdown|json] [--run-tests]
   node src/cli.js --help
 
 Arguments:
   project-path   Folder to analyze (default: ./sample-project)
-  report-path    Markdown report destination (default: ./cloneproof-report.md)
+  report-path    Report destination (default: ./cloneproof-report.md or ./cloneproof-report.json)
 
 Options:
+  --format       Report format: markdown (default) or json
   --run-tests    Explicitly execute the project's npm test script
   --help         Display this help message
 
@@ -77,12 +106,6 @@ No project scripts are executed unless --run-tests is provided.
       return;
     }
     const absoluteProjectPath = path.resolve(projectPath);
-    if (positionalArgs.length > 2) {
-      throw new Error(
-        'Too many arguments. Expected at most a project path and a report path. Use --help for usage.'
-      );
-    }
-
     if (
       !fs.existsSync(absoluteProjectPath) ||
       !fs.statSync(absoluteProjectPath).isDirectory()

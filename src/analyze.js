@@ -90,7 +90,19 @@ function findDocumentedNpmScripts(readmeText) {
     }
   }
 
-  const relevantText = relevantLines.join('\n');
+    // Ignore clearly hypothetical examples rather than treating them
+  // as instructions for the repository being analyzed.
+  const instructionLines = relevantLines.filter((line) => {
+    const normalized = line
+      .replace(/^\s*>\s*/, '')
+      .replace(/^\s*[-*]\s+/, '')
+      .trim();
+
+    return !/^(?:for example|for instance|e\.g\.)\b/i.test(normalized) ||
+      !/\bif\b/i.test(normalized);
+  });
+
+  const relevantText = instructionLines.join('\n');
 
   let match;
 
