@@ -1085,12 +1085,43 @@ checks.push(
   }
 
 
-const projectShell = getProjectNpmScriptShell(root);
-const windowsIssues = findPotentialWindowsScriptIssues(scripts, projectShell);
-checks.push(windowsIssues.length > 0
-    ? check('WARN', 'Scripts reviewed for common Windows shell issues', `${windowsIssues.join(' ')} These are heuristics; review the command before changing it.`)
-    : check('PASS', 'Scripts reviewed for common Windows shell issues', 'No common Unix-only command patterns were detected. This does not prove every script will work on Windows.'));
+  const projectShell = getProjectNpmScriptShell(root);
+  const windowsIssues = findPotentialWindowsScriptIssues(
+    scripts,
+    projectShell
+  );
 
+  if (windowsIssues.length > 0) {
+    checks.push(
+      check(
+        'WARN',
+        'Scripts reviewed for common Windows shell issues',
+        `${windowsIssues.join(' ')} These are heuristics; review the command before changing it.`,
+        {
+          evidence: {
+            file: 'package.json',
+            scripts: Object.fromEntries(
+              Object.entries(scripts).filter(
+                ([, command]) => typeof command === 'string'
+              )
+            ),
+            configuredScriptShell: projectShell
+          },
+          recommendation:
+            'Review the flagged npm scripts and their Windows shell compatibility. ' +
+            'Prefer portable Node.js alternatives where appropriate.'
+        }
+      )
+    );
+  } else {
+    checks.push(
+      check(
+        'PASS',
+        'Scripts reviewed for common Windows shell issues',
+        'No common Unix-only command patterns were detected. This does not prove every script will work on Windows.'
+      )
+    );
+  }
   return finish(root, pkg.name || path.basename(root), checks);
 }
 

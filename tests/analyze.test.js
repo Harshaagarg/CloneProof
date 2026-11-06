@@ -2950,3 +2950,39 @@ test('still detects a missing npm script in real README instructions', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+test('includes structured evidence for Windows script warnings', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'windows-evidence-demo',
+      version: '1.0.0',
+      scripts: {
+        clean: 'rm -rf dist'
+      }
+    },
+    readme: '# Windows Evidence Demo'
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const finding = result.checks.find(
+      item => item.id === 'CP-WIN-001'
+    );
+
+    assert.ok(finding);
+    assert.equal(finding.status, 'WARN');
+
+    assert.equal(finding.evidence.file, 'package.json');
+    assert.equal(finding.evidence.scripts.clean, 'rm -rf dist');
+
+    assert.equal(
+      finding.evidence.configuredScriptShell,
+      null
+    );
+
+    assert.equal(typeof finding.recommendation, 'string');
+    assert.match(finding.recommendation, /Windows/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
