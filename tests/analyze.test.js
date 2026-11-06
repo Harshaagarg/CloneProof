@@ -2986,3 +2986,42 @@ test('includes structured evidence for Windows script warnings', () => {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+test('CLI generates a valid JSON report with --format json', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'cli-json-demo',
+      version: '1.0.0',
+      scripts: {
+        test: 'node --test'
+      }
+    },
+    readme: '# CLI JSON Demo\n\nRun `npm test`.'
+  });
+
+  const reportPath = path.join(root, 'report.json');
+
+  try {
+    const cliPath = path.resolve('src/cli.js');
+
+    const execution = spawnSync(
+      process.execPath,
+      [cliPath, root, reportPath, '--format', 'json'],
+      { encoding: 'utf8' }
+    );
+
+    assert.equal(execution.status, 0, execution.stderr);
+    assert.ok(fs.existsSync(reportPath));
+
+    const report = JSON.parse(
+      fs.readFileSync(reportPath, 'utf8')
+    );
+
+    assert.equal(report.schemaVersion, '1.0.0');
+    assert.equal(report.project.name, 'cli-json-demo');
+    assert.ok(Array.isArray(report.findings));
+
+    assert.match(execution.stdout, /Full JSON report saved to:/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
