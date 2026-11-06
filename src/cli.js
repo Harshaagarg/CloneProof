@@ -1,15 +1,56 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { analyzeProject, formatMarkdownReport } from './analyze.js';
+import {
+  analyzeProject,
+  formatMarkdownReport,
+  formatJsonReport
+} from './analyze.js';
 import { runNpmScript } from './run-check.js';
 
 const args = process.argv.slice(2);
 const runTests = args.includes('--run-tests');
-const positionalArgs = args.filter((arg) => arg !== '--run-tests');
+
+const positionalArgs = [];
+let reportFormat = 'markdown';
+
+for (let i = 0; i < args.length; i++) {
+  const arg = args[i];
+
+  if (arg === '--run-tests' || arg === '--help') {
+    continue;
+  }
+
+  if (arg === '--format') {
+    const value = args[++i];
+
+    if (!['markdown', 'json'].includes(value)) {
+      throw new Error(
+        'Invalid format. Use --format markdown or --format json.'
+      );
+    }
+
+    reportFormat = value;
+    continue;
+  }
+
+  if (arg.startsWith('--')) {
+    throw new Error(
+      `Unknown option: ${arg}. Use --help for usage.`
+    );
+  }
+
+  positionalArgs.push(arg);
+}
 
 const projectPath = positionalArgs[0] ?? './sample-project';
-const reportPath = positionalArgs[1] ?? './cloneproof-report.md';
+
+const defaultReportPath =
+  reportFormat === 'json'
+    ? './cloneproof-report.json'
+    : './cloneproof-report.md';
+
+const reportPath = positionalArgs[1] ?? defaultReportPath;
 
 
 async function main() {
@@ -35,21 +76,6 @@ No project scripts are executed unless --run-tests is provided.
 `);
       return;
     }
-
-    const unknownOption = args.find(
-      (arg) => arg.startsWith('--') &&
-        arg !== '--help' &&
-        arg !== '--run-tests'
-    );
-
-    if (unknownOption) {
-      throw new Error(
-        `Unknown option: ${unknownOption}. Use --help for usage.`
-      );
-    }
-
-
-
     const absoluteProjectPath = path.resolve(projectPath);
     if (positionalArgs.length > 2) {
       throw new Error(
@@ -111,7 +137,10 @@ No project scripts are executed unless --run-tests is provided.
       );
     }
 
-    const report = formatMarkdownReport(result);
+    const report =
+      reportFormat === 'json'
+        ? formatJsonReport(result)
+        : formatMarkdownReport(result);
     const absoluteReportPath = path.resolve(reportPath);
 
     fs.writeFileSync(absoluteReportPath, report, 'utf8');
@@ -128,7 +157,7 @@ No project scripts are executed unless --run-tests is provided.
     }
 
     console.log(
-      `\nFull Markdown report saved to: ${absoluteReportPath}\n`
+      `\nFull ${reportFormat === 'json' ? 'JSON' : 'Markdown'} report saved to: ${absoluteReportPath}\n`
     );
 
     if (result.summary.fail > 0) process.exitCode = 1;

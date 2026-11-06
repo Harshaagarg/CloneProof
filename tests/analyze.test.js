@@ -5,7 +5,7 @@ import { explainFailure, runNpmScript } from '../src/run-check.js';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { analyzeProject, formatMarkdownReport } from '../src/analyze.js';
+import { analyzeProject, formatMarkdownReport, formatJsonReport } from '../src/analyze.js';
 
 function makeProject({ packageJson, readme = '# Demo\n\nRun `npm test`.' , extraFiles = {} } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'cloneproof-test-'));
@@ -2747,6 +2747,147 @@ test('passes when a direct registry dependency has a lockfile package entry', ()
       entryCheck.detail,
       /No expected direct registry dependency package entries are missing/i
     );
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+test('assigns stable IDs to registered findings', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'stable-finding-ids-demo',
+      version: '1.0.0',
+      scripts: {
+        clean: 'rm -rf dist'
+      }
+    },
+    readme: '# Stable Finding IDs Demo'
+  });
+
+  try {
+    const first = analyzeProject(root);
+    const second = analyzeProject(root);
+
+    const firstFinding = first.checks.find(
+      item => item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    const secondFinding = second.checks.find(
+      item => item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(firstFinding);
+    assert.ok(secondFinding);
+
+    assert.equal(firstFinding.id, 'CP-WIN-001');
+    assert.equal(secondFinding.id, 'CP-WIN-001');
+
+    assert.equal(firstFinding.id, secondFinding.id);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('preserves legacy finding fields alongside structured metadata', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'structured-finding-demo',
+      version: '1.0.0'
+    },
+    readme: '# Structured Finding Demo'
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    assert.ok(result.checks.length > 0);
+
+    for (const finding of result.checks) {
+      assert.equal(typeof finding.status, 'string');
+      assert.equal(typeof finding.title, 'string');
+      assert.equal(typeof finding.detail, 'string');
+
+      assert.ok(Object.hasOwn(finding, 'id'));
+      assert.ok(Object.hasOwn(finding, 'evidence'));
+      assert.ok(Object.hasOwn(finding, 'recommendation'));
+    }
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+test('generates a valid structured JSON report', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'json-report-demo',
+      version: '1.0.0',
+      scripts: {
+        test: 'node --test'
+      }
+    },
+    readme: '# JSON Report Demo\n\nRun `npm test`.'
+  });
+
+  try {
+    const result = analyzeProject(root);
+    const jsonText = formatJsonReport(result);
+    const report = JSON.parse(jsonText);
+
+    assert.equal(report.schemaVersion, '1.0.0');
+    assert.equal(report.tool, 'CloneProof');
+    assert.equal(report.project.name, 'json-report-demo');
+    assert.equal(report.project.root, root);
+
+    assert.ok(Array.isArray(report.findings));
+    assert.equal(report.findings.length, result.checks.length);
+
+    assert.deepEqual(report.summary, result.summary);
+    assert.ok(!Number.isNaN(Date.parse(report.generatedAt)));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('preserves finding metadata in JSON without breaking Markdown', () => {
+  const root = makeProject({
+    packageJson: {
+      name: 'json-metadata-demo',
+      version: '1.0.0',
+      scripts: {
+        clean: 'rm -rf dist'
+      }
+    },
+    readme: '# JSON Metadata Demo'
+  });
+
+  try {
+    const result = analyzeProject(root);
+
+    const jsonReport = JSON.parse(formatJsonReport(result));
+    const markdownReport = formatMarkdownReport(result);
+
+    const jsonFinding = jsonReport.findings.find(
+      item =>
+        item.title ===
+        'Scripts reviewed for common Windows shell issues'
+    );
+
+    assert.ok(jsonFinding);
+    assert.equal(jsonFinding.id, 'CP-WIN-001');
+
+    assert.equal(typeof jsonFinding.status, 'string');
+    assert.equal(typeof jsonFinding.title, 'string');
+    assert.equal(typeof jsonFinding.detail, 'string');
+
+    assert.ok(Object.hasOwn(jsonFinding, 'evidence'));
+    assert.ok(Object.hasOwn(jsonFinding, 'recommendation'));
+
+    assert.match(
+      markdownReport,
+      /CloneProof Setup Verification Report/
+    );
+
+    assert.match(markdownReport, /Detailed Findings/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

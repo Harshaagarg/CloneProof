@@ -11,8 +11,38 @@ const LOCKFILES = [
   { file: 'bun.lockb', manager: 'bun' }
 ];
 
-function check(status, title, detail) {
-  return { status, title, detail };
+const FINDING_IDS = Object.freeze({
+  'package.json exists and is valid': 'CP-SETUP-003',
+  'README.md exists': 'CP-SETUP-004',
+  'Package scripts are defined': 'CP-SCRIPT-001',
+  'README npm commands match package.json': 'CP-SCRIPT-002',
+  'Local script files exist': 'CP-SCRIPT-003',
+  'Node.js version is documented': 'CP-NODE-002',
+  'Exact Node.js version declarations are consistent': 'CP-NODE-003',
+  'Node.js version declarations are compatible': 'CP-NODE-004',
+  'Project folder exists': 'CP-SETUP-001',
+  'Package metadata is valid': 'CP-SETUP-002',
+  'Node.js version compatibility': 'CP-NODE-001',
+  'Dependency lockfile exists': 'CP-LOCK-001',
+  'Dependency lockfile check': 'CP-LOCK-002',
+  'Package manager and lockfile are consistent': 'CP-LOCK-003',
+  'Declared dependencies are installed': 'CP-DEPS-001',
+  'npm lockfile JSON validity': 'CP-LOCK-004',
+  'npm lockfile integrity': 'CP-LOCK-005',
+  'npm lockfile dependency synchronization': 'CP-LOCK-006',
+  'npm lockfile package entries': 'CP-LOCK-007',
+  'Scripts reviewed for common Windows shell issues': 'CP-WIN-001'
+});
+
+function check(status, title, detail, options = {}) {
+  return {
+    id: FINDING_IDS[title] ?? null,
+    status,
+    title,
+    detail,
+    evidence: options.evidence ?? null,
+    recommendation: options.recommendation ?? null
+  };
 }
 
 function readText(filePath) {
@@ -1060,7 +1090,23 @@ function finish(root, projectName, checks) {
   };
   return { root, projectName, checks, summary };
 }
-
+export function formatJsonReport(result) {
+  return JSON.stringify(
+    {
+      schemaVersion: '1.0.0',
+      tool: 'CloneProof',
+      generatedAt: new Date().toISOString(),
+      project: {
+        name: result.projectName,
+        root: result.root
+      },
+      summary: result.summary,
+      findings: result.checks
+    },
+    null,
+    2
+  ) + '\n';
+}
 export function formatMarkdownReport(result) {
 const projectName = result.projectName || 'Unnamed Project';
 
